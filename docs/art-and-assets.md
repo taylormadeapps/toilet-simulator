@@ -70,7 +70,7 @@ Examples:
 
 ### Audio
 - **SFX:** WAV (44.1kHz, 16-bit). WAV for zero-latency playback.
-- **Music:** OGG Vorbis. Smaller file size, Pygame decodes on the fly.
+- **Music:** OGG Vorbis. Smaller file size, pygame-ce decodes on the fly.
 - **Sample rate:** 44100 Hz for all audio
 - **Channels:** Mono for SFX (spatial mixing later if needed). Stereo for music.
 

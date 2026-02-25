@@ -80,7 +80,7 @@ installed on his machine:
 ```
 python src/main.py
 ```
-Requires Python 3.12+ and Pygame installed on the Windows machine.
+Requires Python 3.12+ and pygame-ce installed on the Windows machine.
 
 **Phase 2 (when friction is too high):** Package with PyInstaller to create
 a standalone `.exe`:
@@ -92,10 +92,11 @@ Drops a single executable into `dist/` — copy to the shared folder.
 **Phase 3 (stretch):** Proper installer or zip distribution with bundled assets.
 
 #### File Share Setup
-- **Windows share:** `//JUPITER/toiletsim`
+- **Windows share:** `\\JUPITER\toiletsim` (IP: `192.168.0.21`)
 - **macOS mount point:** `/Volumes/toiletsim`
-  (mount via Finder: Go → Connect to Server → `smb://JUPITER/toiletsim`)
-- **Auth:** Open access (everyone) for now
+  (mount via Finder: Go → Connect to Server → `smb://192.168.0.21/toiletsim`)
+- **Auth:** Microsoft account login — `mysterydiner@hotmail.com` has read/write.
+  Guest disabled, everyone removed. Credentials stored in macOS Keychain.
 - Build artifacts (or raw project) are copied to this share after each
   successful build
 
@@ -121,7 +122,7 @@ Full procedure in `.claude/commands/ts-cap.md`.
 
 Full procedure in `.claude/commands/ts-run.md`.
 
-1. Check Pygame is installed
+1. Check pygame-ce is installed
 2. `python src/main.py`
 3. Report any errors
 
@@ -131,6 +132,19 @@ Full procedure in `.claude/commands/ts-test.md`.
 
 1. `SDL_VIDEODRIVER=dummy python -m pytest tests/ -v`
 2. Report results and failures
+
+### /ts-deploy — Deploy to Windows Test Machine
+
+Full procedure in `.claude/commands/ts-deploy.md`.
+
+1. Run `/ts-test` — all tests must pass
+2. Run `/ts-run` — confirm game launches on Mac
+3. Check share is mounted at `/Volumes/toiletsim/`
+4. Rsync project to share (excludes `.git`, `__pycache__`, `.claude`, etc.)
+5. Verify deploy contents
+
+**Target:** `smb://192.168.0.21/toiletsim` → `/Volumes/toiletsim/`
+**Tester runs:** `run.bat` or asks Claude Code to launch the game.
 
 ---
 

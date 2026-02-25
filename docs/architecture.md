@@ -1,7 +1,7 @@
 # Toilet Simulator — Architecture
 
 Technical blueprint for the codebase. How the code is structured, what goes
-where, and the Pygame-specific rules that keep things performant and sane.
+where, and the pygame-ce-specific rules that keep things performant and sane.
 
 ---
 
@@ -9,7 +9,7 @@ where, and the Pygame-specific rules that keep things performant and sane.
 
 ```
 src/
-├── main.py              # Entry point. Inits Pygame, creates Game, runs loop.
+├── main.py              # Entry point. Inits pygame-ce, creates Game, runs loop.
 ├── game/
 │   ├── __init__.py
 │   ├── game.py          # Top-level Game class. Owns the loop and state machine.
@@ -119,7 +119,7 @@ accurate.
 
 ## Collision Detection
 
-Pygame rect and mask-based. No external physics engine.
+pygame-ce rect and mask-based. No external physics engine.
 
 | Collision | Method | Result |
 |-----------|--------|--------|
@@ -167,9 +167,9 @@ stays the same.
 
 ---
 
-## Pygame-Specific Rules
+## pygame-ce-Specific Rules
 
-These prevent common Pygame performance traps:
+These prevent common pygame-ce performance traps:
 
 1. **Surfaces at init, not per-frame.** Create all surfaces during scene
    setup. Never call `pygame.Surface()` inside the game loop.
@@ -190,7 +190,7 @@ These prevent common Pygame performance traps:
 ## Performance Rules
 
 1. **Target:** 60 FPS minimum on the dev machine.
-2. **Profile before optimising.** Use `cProfile` or Pygame's clock to
+2. **Profile before optimising.** Use `cProfile` or pygame-ce's clock to
    identify actual bottlenecks. No premature Cython, Numpy, or C extensions.
 3. **Pure Python first.** Optimise only proven hot paths.
 4. **Particle count budget:** Set a reasonable max particle count per stream.
@@ -202,7 +202,7 @@ These prevent common Pygame performance traps:
 
 - **Dev machine:** macOS (Tahoe). Primary build and test environment.
 - **Test machine:** Windows PC (son's machine via file sharing).
-- **Pygame is cross-platform** but test on both platforms per iteration.
+- **pygame-ce is cross-platform** but test on both platforms per iteration.
 - **Path handling:** Always use `pathlib.Path` or `os.path.join()`. Never
   hardcode `/` or `\` separators.
 - **Line endings:** Git handles this via `.gitattributes` if needed.

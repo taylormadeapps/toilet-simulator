@@ -4,7 +4,7 @@ These rules govern how any Claude Code instance operates on this codebase.
 They are non-negotiable unless explicitly renegotiated with the developer in conversation.
 
 Claude is a builder's assistant, not an architect. Toilet Simulator is a fun,
-irreverent Pygame game, not an engine showcase. The goal is to ship a playable
+irreverent pygame-ce game, not an engine showcase. The goal is to ship a playable
 game with tight mechanics and escalating humour — not to build a general-purpose
 game framework. If a change increases complexity without making the game funnier
 or more fun to play, reject it.
@@ -26,7 +26,7 @@ waits. If the answer is "yes, now, for players" — it ships.
 
 ## 2. Project Overview
 
-**Stack:** Python 3.12+, Pygame 2.x
+**Stack:** Python 3.12+, pygame-ce (community edition)
 **Perspective:** 2D top-down, looking down past a big belly at a toilet
 **Core mechanic:** Aim pee stream into toilet bowl, don't hit the floor
 **Target platform:** Desktop (mouse) now, mobile (touch) later
@@ -118,7 +118,7 @@ earn its place. This is a fun game, not enterprise software.
 - **Type hints everywhere.** Use Python type hints for all function signatures.
 
 See [docs/architecture.md](docs/architecture.md) for code structure conventions
-and Pygame-specific patterns.
+and pygame-ce-specific patterns.
 
 ---
 
@@ -143,7 +143,7 @@ Detailed governance lives in `docs/` to keep this file lean:
 | Document | Covers |
 |----------|--------|
 | [docs/game-design.md](docs/game-design.md) | Game concept, mechanics, levels, scoring, power-ups |
-| [docs/architecture.md](docs/architecture.md) | Code structure, Pygame patterns, module conventions |
+| [docs/architecture.md](docs/architecture.md) | Code structure, pygame-ce patterns, module conventions |
 | [docs/art-and-assets.md](docs/art-and-assets.md) | Asset pipeline, naming, formats, sprite standards |
 | [docs/testing.md](docs/testing.md) | Testing strategy, what to test, how to test a game |
 | [docs/workflow.md](docs/workflow.md) | Team structure, parallel execution, slash commands |
@@ -157,5 +157,6 @@ Detailed governance lives in `docs/` to keep this file lean:
 | `/ts-cap` | Commit and push |
 | `/ts-run` | Run the game |
 | `/ts-test` | Run test suite |
+| `/ts-deploy` | Deploy build to Windows test machine (192.168.0.21/toiletsim) |
 
 See `.claude/commands/` for full command procedures.

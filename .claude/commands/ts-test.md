@@ -15,6 +15,6 @@ Execute immediately — no plan mode, no permission prompts.
 
 ## Notes
 
-- `SDL_VIDEODRIVER=dummy` runs Pygame without a display (headless).
+- `SDL_VIDEODRIVER=dummy` runs pygame-ce without a display (headless).
 - `SDL_AUDIODRIVER=dummy` prevents audio device errors on headless runs.
 - Both are required for CI and headless environments.

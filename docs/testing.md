@@ -42,7 +42,7 @@ transitions. Those are testable. Focus there.
 
 ## Test Framework
 
-**pytest** with Pygame running headless.
+**pytest** with pygame-ce running headless.
 
 ### Running Tests
 
@@ -50,7 +50,7 @@ transitions. Those are testable. Focus there.
 SDL_VIDEODRIVER=dummy python -m pytest tests/ -v
 ```
 
-The `SDL_VIDEODRIVER=dummy` environment variable runs Pygame without a display,
+The `SDL_VIDEODRIVER=dummy` environment variable runs pygame-ce without a display,
 which is required for CI and headless test runs.
 
 On macOS, if dummy driver causes issues:
@@ -65,7 +65,7 @@ SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy python -m pytest tests/ -v
 
 ```
 tests/
-├── conftest.py              # Shared fixtures (Pygame init, mock entities)
+├── conftest.py              # Shared fixtures (pygame-ce init, mock entities)
 ├── test_physics.py          # Stream arc, gravity, particle movement
 ├── test_collision.py        # Bowl hit, floor hit, object hit detection
 ├── test_scoring.py          # Score calculation, combos, level tallying
@@ -90,7 +90,7 @@ Common fixtures in `conftest.py`:
 ```python
 @pytest.fixture
 def pygame_init():
-    """Initialise Pygame for test. Teardown after."""
+    """Initialise pygame-ce for test. Teardown after."""
     pygame.init()
     yield
     pygame.quit()
