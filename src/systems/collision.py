@@ -7,27 +7,36 @@ from game.settings import SCREEN_WIDTH, SCREEN_HEIGHT
 
 
 def check_collisions(stream: Stream, toilet: Toilet, scoring: Scoring) -> None:
-    """Test each alive particle for bowl or floor collision."""
+    """Test each alive particle for bowl or floor collision.
+
+    Only checks particles that are descending (vy > 0). On the way up
+    the stream flies freely — the bowl hitbox is for scoring, not a wall.
+    Floor hits only register once the particle has fallen past the bowl.
+    """
+    # Floor threshold: below the bowl bottom, the particle clearly missed
+    floor_y = toilet.centre_y + toilet.bowl_ry + 10
+
     for particle in stream.particles:
         if not particle.alive:
             continue
 
-        # Skip particles still above the bowl zone (mid-arc)
-        if particle.y < toilet.centre_y - toilet.bowl_ry - 10:
+        # Off-screen — kill silently regardless of direction
+        if _is_off_screen(particle.x, particle.y):
+            particle.alive = False
+            continue
+
+        # Only score/kill particles that are falling back down
+        if particle.vy <= 0:
             continue
 
         if toilet.is_in_bowl(particle.x, particle.y):
-            # Hit the bowl — good
+            # Landed in the bowl — good
             is_centre = toilet.is_in_centre(particle.x, particle.y)
             scoring.register_bowl_hit(is_centre=is_centre)
             stream.kill_particle(particle, spawn_splash=True)
 
-        elif _is_off_screen(particle.x, particle.y):
-            # Off screen — kill silently
-            particle.alive = False
-
-        else:
-            # Hit the floor — bad
+        elif particle.y > floor_y:
+            # Fallen past the bowl — floor hit
             scoring.register_floor_hit()
             stream.kill_particle(particle, spawn_splash=True)
 

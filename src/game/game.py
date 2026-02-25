@@ -75,13 +75,23 @@ class Game:
 
         if transition == "play":
             self.state = PlayingState()
+            _grab_mouse(True)
 
         elif transition == "results":
             data = getattr(self.state, "results_data", {})
             self.state = ResultsState(data)
+            _grab_mouse(False)
 
         elif transition == "splash":
             self.state = SplashState()
+            _grab_mouse(False)
 
         elif transition == "quit":
+            _grab_mouse(False)
             self.running = False
+
+
+def _grab_mouse(grab: bool) -> None:
+    """Hide cursor and confine mouse to window, or release."""
+    pygame.mouse.set_visible(not grab)
+    pygame.event.set_grab(grab)

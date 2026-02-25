@@ -26,14 +26,8 @@ class Toilet:
         )
 
         # Centre zone for bonus scoring (inner 40% of bowl)
-        inner_rx = int(self.bowl_rx * 0.4)
-        inner_ry = int(self.bowl_ry * 0.4)
-        self.centre_rect = pygame.Rect(
-            self.centre_x - inner_rx,
-            self.centre_y - inner_ry,
-            inner_rx * 2,
-            inner_ry * 2,
-        )
+        self.centre_rx = self.bowl_rx * 0.4
+        self.centre_ry = self.bowl_ry * 0.4
 
     def is_in_bowl(self, x: float, y: float) -> bool:
         """Check if a point is inside the bowl ellipse."""
@@ -42,14 +36,16 @@ class Toilet:
         return (dx * dx + dy * dy) <= 1.0
 
     def is_in_centre(self, x: float, y: float) -> bool:
-        """Check if a point is in the centre scoring zone."""
-        return self.centre_rect.collidepoint(int(x), int(y))
+        """Check if a point is in the centre scoring zone (ellipse)."""
+        dx = (x - self.centre_x) / self.centre_rx
+        dy = (y - self.centre_y) / self.centre_ry
+        return (dx * dx + dy * dy) <= 1.0
 
     def draw(self, surface: pygame.Surface) -> None:
         """Draw toilet from top-down view."""
         # Toilet base/tank (rectangle behind bowl)
         base_rect = pygame.Rect(0, 0, self.bowl_rx * 2 + 40, 50)
-        base_rect.center = (self.centre_x, self.centre_y + self.bowl_ry + 20)
+        base_rect.center = (self.centre_x, self.centre_y - self.bowl_ry - 20)
         pygame.draw.rect(surface, TOILET_BASE, base_rect, border_radius=8)
         pygame.draw.rect(surface, BOWL_RIM, base_rect, width=2, border_radius=8)
 

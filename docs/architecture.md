@@ -70,13 +70,13 @@ reference.
 
 | State | Description |
 |-------|-------------|
-| `Menu` | Main menu. Start game, level select, quit. |
-| `Playing` | Active gameplay. Runs physics, input, rendering. |
-| `Paused` | Gameplay frozen. Overlay with resume/quit options. |
-| `Results` | Level complete. Shows score breakdown, star rating, next level. |
+| `SplashState` | Title screen. Click or SPACE to play, ESC to quit. |
+| `PlayingState` | Active gameplay. Mouse-Y pressure, physics, scoring. ESC → splash. |
+| `ResultsState` | Level complete. Score breakdown. Click or SPACE → splash, ESC → quit. |
 
-Transitions are explicit. No state can transition to another state without
-going through the Game class. States do not reference each other directly.
+Transitions are explicit via `self.transition` string. The Game class reads
+the flag and switches state. States do not reference each other directly.
+Mouse is grabbed (hidden + confined) during PlayingState, released otherwise.
 
 ---
 
@@ -102,18 +102,21 @@ systems — systems pull data from entities, compute, and push results back.
 
 The stream is modelled as a series of particles emitted from the stream origin.
 
-- **Emission:** Particles spawn per-frame at the origin with initial velocity
-  aimed toward the pointer position.
-- **Gravity:** Particles accelerate downward (toward the floor plane in 2D).
-- **Spread:** Small random offset applied to initial velocity for realism.
-- **Pressure:** Bladder volume scales initial particle speed. Full bladder =
-  fast particles = longer reach and more force. Near-empty = slow, droopy.
-- **Lifetime:** Particles die on collision with bowl, floor, or objects.
-  Dead particles trigger scoring and visual effects (splash).
+- **Emission:** Particles spawn per-tick at the origin with initial velocity
+  aimed upward toward the pointer position. Rate: 3 particles per tick.
+- **Gravity:** Particles accelerate downward (150 px/s²). This decelerates
+  upward-moving particles, creating a natural arc that peaks and falls.
+- **Spread:** Small random angle offset (±0.08 rad) for realism.
+- **Speed:** Interpolated between STREAM_MIN_SPEED (100) and
+  STREAM_BASE_SPEED (500) based on mouse-Y pressure (0.0–1.0).
+- **Pressure:** Driven by mouse Y position, NOT bladder volume. Higher
+  mouse = more pressure = faster particles = higher arc = reaches bowl.
+- **Collision:** Particles fly freely while ascending (vy ≤ 0). Scored only
+  when descending (vy > 0). Bowl hits register inside the ellipse, floor
+  hits register when particles fall below the bowl.
+- **Particle cap:** 200 max. Oldest alive particle recycled when at cap.
 
-This is 2D — "gravity" is simulated as a visual arc on the stream shape,
-not literal 3D physics. Keep it simple enough to feel right, not physically
-accurate.
+This is 2D — gravity creates a visual arc, not literal 3D physics.
 
 ---
 
@@ -123,13 +126,14 @@ pygame-ce rect and mask-based. No external physics engine.
 
 | Collision | Method | Result |
 |-----------|--------|--------|
-| Stream → Bowl | Rect or mask overlap | Score point, kill particle, splash FX |
-| Stream → Floor | Particle outside bowl rect | Penalty, kill particle, puddle FX |
-| Stream → Object | Rect overlap | Apply force to object, kill particle |
-| Stream → Rim | Edge detection (stretch) | Splash in random direction |
+| Stream → Bowl | Ellipse equation (descending only) | Score point, kill particle, splash FX |
+| Stream → Centre | Inner ellipse (40% of bowl radii) | Bonus point, kill particle, splash FX |
+| Stream → Floor | Particle below bowl bottom (descending) | Penalty, kill particle, splash FX |
+| Stream → Off-screen | Bounds check (±20px margin) | Kill silently, no score |
 
-Collision is checked per stream particle per frame. If this becomes a
-bottleneck, spatial partitioning can be added — but profile first.
+Collision is checked per stream particle per tick. Only descending particles
+(vy > 0) are evaluated — ascending particles fly freely through the bowl zone.
+Bowl and centre zones use ellipse equations, not rectangle collision.
 
 ---
 
@@ -201,7 +205,9 @@ These prevent common pygame-ce performance traps:
 ## Cross-Platform Notes
 
 - **Dev machine:** macOS (Tahoe). Primary build and test environment.
-- **Test machine:** Windows PC (son's machine via file sharing).
+- **Test machine:** Windows laptop (JUPITER) via SMB share at `//JUPITER/toiletsim`.
+  Deploy via rsync. Auth: `mysterydiner@hotmail.com`.
+- **Screen:** 390×844 pixels (iPhone 14/15 portrait logical resolution, 9:19.5).
 - **pygame-ce is cross-platform** but test on both platforms per iteration.
 - **Path handling:** Always use `pathlib.Path` or `os.path.join()`. Never
   hardcode `/` or `\` separators.

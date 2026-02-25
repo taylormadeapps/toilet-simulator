@@ -23,9 +23,12 @@ Think PowerWash Simulator meets pub toilet on a Friday night.
 ## Player Character
 
 - **Perspective:** Top-down, first person. The player sees their own belly,
-  feet/shoes at the edges, and the toilet below.
-- **Belly:** Large, round, partially obscures the view. The belly IS the
-  character — it frames the entire game viewport.
+  feet/shoes at the edges, and the toilet above.
+- **Belly:** Large semi-ellipse at the bottom of the screen. The widest point
+  sits on the screen edge, so only the top half is visible — a proper
+  semicircle. The belly IS the character — it frames the viewport.
+- **Moobs:** Two fleshy mounds at the top of the belly with underboob shadows,
+  nipples, and scattered chest hair. Looking down past them at the toilet.
 - **Genitals:** Not visible. The stream appears from beneath the belly.
   This keeps it silly rather than crude.
 - **Movement:** The player character is stationary (standing at the toilet).
@@ -39,18 +42,31 @@ The pee stream is the central game mechanic. Everything revolves around
 controlling it.
 
 ### Stream Properties
-- **Origin:** Fixed point beneath the belly (bottom-centre of belly sprite)
-- **Direction:** Controlled by pointer position (mouse now, touch later)
-- **Arc:** The stream has a slight arc/gravity — it's not a laser beam
+- **Origin:** Fixed point above the belly (top-centre of belly sprite)
+- **Direction:** Fires upward toward the toilet. Aimed at mouse X position.
+- **Arc:** Gravity creates a natural arc — particles fly up, peak, fall back
 - **Spread:** Slight random spread to simulate realism and add challenge
-- **Pressure:** Linked to bladder volume. Full bladder = strong stream,
-  near-empty = weak dribble. Pressure affects reach and force.
+- **Pressure:** Controlled by mouse Y position (see Mouse-Y Pressure below).
+  Pressure affects particle speed/reach. Bladder does NOT affect pressure —
+  it is purely a timer.
+
+### Mouse-Y Pressure Control
+- **Mouse up (toward toilet):** Full pressure. Stream fires strong, arcs high,
+  reaches the bowl.
+- **Mouse mid-screen:** Half pressure. Stream just reaches the bowl rim.
+- **Mouse down (toward belly):** Weak/no stream. Push right down = stops.
+- **Push back up:** Stream resumes. Intuitive push-to-pee mechanic.
+- **Bladder depletion:** Only drains while stream is actively flowing.
+  Depletion rate scales with mouse pressure — gentle push = slow drain.
 
 ### Stream Interaction
-- **Bowl hit:** Scores points (or avoids penalty — see Scoring)
-- **Floor hit:** Loses points (or triggers penalty)
-- **Object hit:** Applies force to movable objects (power-wash mechanic)
-- **Rim hit:** Could go either way — splash physics (stretch goal)
+- **Bowl hit:** Registered when particles descend into the bowl ellipse
+- **Floor hit:** Registered when particles fall past the bowl without entering
+- **Centre hit:** Bonus for landing in the inner 40% of the bowl
+- **Object hit:** Applies force to movable objects (power-wash mechanic, future)
+- **Collision model:** Particles fly freely on the way up. Only scored when
+  descending (vy > 0). This lets the stream arc naturally through the bowl
+  zone without premature kills.
 
 ---
 
@@ -60,35 +76,33 @@ The bladder meter is the level timer. You don't control when the level ends —
 your bladder does.
 
 - **Volume:** Starts full at level begin, depletes as you pee
-- **Depletion rate:** Constant base rate, possibly modified by level
+- **Depletion rate:** Proportional to mouse pressure. Pushing harder drains
+  faster. Pulling back pauses drainage entirely.
+- **Pressure independence:** Bladder volume does NOT affect stream pressure.
+  A full bladder and a nearly-empty bladder produce the same stream at the
+  same mouse position. Bladder is purely a timer.
 - **Display:** Vertical meter on HUD (like a health bar but for piss)
-- **Level end:** When bladder hits zero, the level ends and score is tallied
+- **Level end:** When bladder hits zero AND all remaining particles have
+  landed/despawned, the results screen appears.
 - **Urgency:** No urgency mechanic initially. The stream just flows until empty.
 
 ---
 
 ## Scoring
 
-**Status: TBD — iterating between two models.**
+**Active model: Penalty**
 
-### Option A: Penalty Model
-- Start with a perfect score
-- Lose points for every unit of pee that hits the floor
-- Bonus for hitting the bowl centre vs rim
-- Clean finish bonus if zero floor hits
+### Penalty Model (Active)
+- Start at 1000 points
+- Lose 5 points per floor hit
+- Gain 1 point per centre-zone hit (inner 40% of bowl)
+- +200 clean finish bonus if zero floor hits
+- Minimum score is 0 (cannot go negative)
 
-### Option B: Reward Model
-- Start at zero
-- Earn points for every unit of pee that lands in the bowl
-- Multiplier for consecutive bowl hits (combo streak)
-- Bonus for accuracy percentage at level end
-
-### Decision Notes
-- Both models will be prototyped in Level 1
-- Whichever feels better in playtesting wins
-- Log the decision here when made
-
-**Active model:** _Not yet decided_
+### Results Screen
+- Shows: final score, accuracy %, bowl hits, floor hits, centre hits
+- Clean finish bonus displayed if earned
+- Click or SPACE returns to splash screen
 
 ---
 
@@ -188,3 +202,9 @@ _Record design decisions and pivots here as they happen._
 | Date | Decision | Notes |
 |------|----------|-------|
 | — | Project started | Initial design doc created |
+| 2026-02-25 | Penalty scoring model adopted | Start 1000, -5 floor, +1 centre, +200 clean |
+| 2026-02-25 | Mouse-Y pressure control | Mouse position drives stream, not bladder volume |
+| 2026-02-25 | Layout flipped | Belly at bottom (semi-ellipse), toilet at top |
+| 2026-02-25 | iPhone portrait resolution | 390×844 (9:19.5 aspect ratio) |
+| 2026-02-25 | Moobs added | Hairy chest/moobs on the belly for character |
+| 2026-02-25 | Descending-only collision | Particles scored only when falling back down |

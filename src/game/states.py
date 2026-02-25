@@ -110,11 +110,13 @@ class PlayingState:
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    self.transition = "quit"
+                    self.transition = "splash"
 
     def update(self, dt: float) -> None:
-        self.bladder.update(dt)
-        update_stream(self.stream, self.bladder, dt)
+        # update_stream returns mouse pressure (0–1) used this tick
+        flow = update_stream(self.stream, self.bladder, dt)
+        # Bladder only depletes while actually flowing
+        self.bladder.update(dt, flow_rate=flow)
         check_collisions(self.stream, self.toilet, self.scoring)
 
         # Level ends when bladder empty AND all particles have landed
