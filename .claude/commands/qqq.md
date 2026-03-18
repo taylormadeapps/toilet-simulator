@@ -1,4 +1,4 @@
-# /ts-run — Run the Game
+# /qqq — Run the Game
 
 Execute immediately — no plan mode, no permission prompts.
 

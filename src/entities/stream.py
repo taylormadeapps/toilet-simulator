@@ -11,7 +11,7 @@ import pygame
 from game.settings import (
     STREAM_COLOUR, STREAM_COLOUR_WEAK, STREAM_PARTICLE_RADIUS,
     STREAM_MAX_PARTICLES, STREAM_BASE_SPEED, STREAM_MIN_SPEED,
-    STREAM_SPREAD, STREAM_EMIT_RATE, GRAVITY,
+    STREAM_SPREAD, STREAM_EMIT_RATE, STREAM_DECEL,
     SPLASH_COLOUR, SPLASH_PARTICLE_COUNT, SPLASH_PARTICLE_SPEED,
     SPLASH_PARTICLE_LIFETIME, SPLASH_PARTICLE_RADIUS,
 )
@@ -24,7 +24,6 @@ class Particle:
     vx: float
     vy: float
     alive: bool = True
-    in_bowl: bool = False  # debug: True when particle is inside the hitbox
 
 
 @dataclass
@@ -79,12 +78,19 @@ class Stream:
             ))
 
     def update(self, dt: float) -> None:
-        """Move all particles. No gravity — stream travels in a straight line."""
+        """Move particles, decelerating each frame to simulate the z-axis arc."""
         for p in self.particles:
             if not p.alive:
                 continue
             p.x += p.vx * dt
             p.y += p.vy * dt
+            # Constant deceleration — reduce speed while keeping direction
+            speed = math.hypot(p.vx, p.vy)
+            if speed > 0:
+                new_speed = max(0.0, speed - STREAM_DECEL * dt)
+                scale = new_speed / speed
+                p.vx *= scale
+                p.vy *= scale
 
         # Update splash particles
         for s in self.splashes:
@@ -120,9 +126,8 @@ class Stream:
 
         for p in self.particles:
             if p.alive:
-                p_colour = (255, 0, 0) if p.in_bowl else colour
                 pygame.draw.circle(
-                    surface, p_colour,
+                    surface, colour,
                     (int(p.x), int(p.y)),
                     STREAM_PARTICLE_RADIUS,
                 )

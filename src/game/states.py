@@ -68,11 +68,6 @@ class SplashState:
         surface.blit(bot_scaled, bot_scaled.get_rect(
             centerx=SCREEN_WIDTH // 2, centery=SCREEN_HEIGHT // 3 + 50))
 
-        # Toilet emoji placeholder
-        emoji = self.font_title.render("\U0001f6bd", True, WHITE)
-        surface.blit(emoji, emoji.get_rect(
-            centerx=SCREEN_WIDTH // 2, centery=SCREEN_HEIGHT // 2 + 40))
-
         # Blinking prompt
         if (self.frame // 30) % 2 == 0:
             prompt = self.font_prompt.render("Click or press SPACE to start", True, YELLOW)

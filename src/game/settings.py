@@ -61,6 +61,8 @@ STREAM_SPREAD = 0.08
 STREAM_EMIT_RATE = 3
 STREAM_PARTICLE_RADIUS = 3
 STREAM_MAX_PARTICLES = 1500
+STREAM_DECEL = 340.0    # px/s² — constant deceleration simulating z-axis arc
+STREAM_LAND_SPEED = 5.0   # px/s — speed threshold at which particle has landed
 
 # --- Bladder ---
 BLADDER_START = 1.0

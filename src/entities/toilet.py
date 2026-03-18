@@ -3,7 +3,7 @@
 import pygame
 
 from game.settings import (
-    BOWL_WHITE, BOWL_RIM, TOILET_BASE, WATER_COLOUR,
+    BOWL_WHITE, BOWL_RIM, TOILET_BASE, WATER_COLOUR, DARK_BLUE,
     TOILET_CENTRE_X, TOILET_CENTRE_Y, BOWL_RADIUS_X, BOWL_RADIUS_Y,
 )
 
@@ -31,9 +31,11 @@ class Toilet:
         self.centre_ry: float = 45.0
 
     def is_in_bowl(self, x: float, y: float) -> bool:
-        """Check if a point is inside the bowl ellipse."""
-        dx = (x - self.centre_x) / self.bowl_rx
-        dy = (y - self.centre_y) / self.bowl_ry
+        """Check if a point is inside the water area (bowl minus rim)."""
+        rx = self.bowl_rx - 8
+        ry = self.bowl_ry - 8
+        dx = (x - self.centre_x) / rx
+        dy = (y - self.centre_y) / ry
         return (dx * dx + dy * dy) <= 1.0
 
     def is_in_centre(self, x: float, y: float) -> bool:
@@ -70,3 +72,11 @@ class Toilet:
         water_rect = pygame.Rect(0, 0, self.bowl_rx * 2 - 16, self.bowl_ry * 2 - 16)
         water_rect.center = (self.centre_x, self.centre_y)
         pygame.draw.ellipse(surface, WATER_COLOUR, water_rect)
+
+        # Scoring hitbox outline
+        hitbox_rect = pygame.Rect(
+            0, 0,
+            int(self.centre_rx * 2), int(self.centre_ry * 2),
+        )
+        hitbox_rect.center = (self.centre_x, self.centre_y)
+        pygame.draw.ellipse(surface, DARK_BLUE, hitbox_rect, width=2)
