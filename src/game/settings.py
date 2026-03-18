@@ -19,6 +19,7 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 YELLOW = (255, 220, 50)
 DARK_BLUE = (20, 25, 45)
+CENTRE_ZONE_COLOUR = (0, 200, 210)  # cyan target zone
 LIGHT_BLUE = (100, 150, 220)
 GOLD = (255, 200, 50)
 GREY = (120, 120, 120)

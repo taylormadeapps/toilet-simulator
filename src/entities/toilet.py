@@ -3,7 +3,7 @@
 import pygame
 
 from game.settings import (
-    BOWL_WHITE, BOWL_RIM, TOILET_BASE, WATER_COLOUR, DARK_BLUE,
+    BOWL_WHITE, BOWL_RIM, TOILET_BASE, WATER_COLOUR, DARK_BLUE, CENTRE_ZONE_COLOUR,
     TOILET_CENTRE_X, TOILET_CENTRE_Y, BOWL_RADIUS_X, BOWL_RADIUS_Y,
 )
 
@@ -25,10 +25,9 @@ class Toilet:
             self.bowl_ry * 2,
         )
 
-        # Water zone — the actual scoring target (tight circle at bowl centre).
-        # Outer bowl is visual only; particles must reach this zone to score.
-        self.centre_rx: float = 45.0
-        self.centre_ry: float = 45.0
+        # Water zone — centre scoring target. Taller oval matches the bowl shape.
+        self.centre_rx: float = 28.0
+        self.centre_ry: float = 70.0
 
     def is_in_bowl(self, x: float, y: float) -> bool:
         """Check if a point is inside the water area (bowl minus rim)."""
@@ -73,10 +72,10 @@ class Toilet:
         water_rect.center = (self.centre_x, self.centre_y)
         pygame.draw.ellipse(surface, WATER_COLOUR, water_rect)
 
-        # Scoring hitbox outline
+        # Centre scoring zone — filled dark blue oval
         hitbox_rect = pygame.Rect(
             0, 0,
             int(self.centre_rx * 2), int(self.centre_ry * 2),
         )
         hitbox_rect.center = (self.centre_x, self.centre_y)
-        pygame.draw.ellipse(surface, DARK_BLUE, hitbox_rect, width=2)
+        pygame.draw.ellipse(surface, CENTRE_ZONE_COLOUR, hitbox_rect)
