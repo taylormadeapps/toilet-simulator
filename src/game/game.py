@@ -8,6 +8,7 @@ import pygame
 
 from game.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, WINDOW_TITLE
 from game.states import SplashState, PlayingState, ResultsState
+from systems.input_handler import update_cursor, reset_cursor
 
 # Fixed timestep: 60 ticks per second, decoupled from render rate.
 TICK_RATE = 60
@@ -38,6 +39,9 @@ class Game:
             # Raw frame time in seconds, clamped
             frame_time = min(self.clock.tick(FPS) / 1000.0, MAX_FRAME_TIME)
             accumulator += frame_time
+
+            # Update virtual cursor from relative mouse delta
+            update_cursor()
 
             # Gather events once per frame
             events = pygame.event.get()
@@ -76,6 +80,7 @@ class Game:
         if transition == "play":
             self.state = PlayingState()
             _grab_mouse(True)
+            reset_cursor()
 
         elif transition == "results":
             data = getattr(self.state, "results_data", {})

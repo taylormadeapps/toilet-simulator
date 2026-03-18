@@ -20,6 +20,7 @@ from systems.scoring import Scoring
 from systems.physics import update_stream
 from systems.collision import check_collisions
 from ui.hud import HUD
+from systems.input_handler import get_pointer_position
 
 
 # ---------------------------------------------------------------------------
@@ -209,8 +210,8 @@ def _draw_floor(surface: pygame.Surface) -> None:
 
 
 def _draw_reticle(surface: pygame.Surface) -> None:
-    """Draw a crosshair at the current mouse position."""
-    x, y = pygame.mouse.get_pos()
+    """Draw a crosshair at the virtual cursor position."""
+    x, y = (int(v) for v in get_pointer_position())
     r = 10   # radius of gap in centre
     arm = 6  # length of each arm beyond the gap
     colour = (255, 255, 255)

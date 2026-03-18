@@ -90,6 +90,14 @@ BOWL_RADIUS_Y = 144
 PRESSURE_ZONE_TOP = 40       # mouse at top = max pressure
 PRESSURE_ZONE_BOTTOM = 616   # mouse near belly = zero flow (much less sensitive)
 
+# Aim sensitivity: scales how far the stream deflects from the virtual cursor.
+# 1.0 = cursor position used directly; lower = narrower deflection range.
+AIM_SENSITIVITY = 1.0
+
+# Cursor speed: scales raw mouse delta applied to the virtual crosshair.
+# 1.0 = 1:1 mouse movement; lower = slower, easier to aim precisely.
+CURSOR_SPEED = 0.54
+
 FLOOR_TILE_SIZE = 40
 
 # --- Splash FX ---

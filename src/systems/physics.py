@@ -3,7 +3,10 @@
 from entities.stream import Stream
 from systems.bladder import Bladder
 from systems.input_handler import get_pointer_position
-from game.settings import PRESSURE_ZONE_TOP, PRESSURE_ZONE_BOTTOM
+from game.settings import (
+    PRESSURE_ZONE_TOP, PRESSURE_ZONE_BOTTOM,
+    STREAM_ORIGIN_X, STREAM_ORIGIN_Y, AIM_SENSITIVITY,
+)
 
 
 def mouse_pressure(mouse_y: float) -> float:
@@ -26,13 +29,18 @@ def update_stream(stream: Stream, bladder: Bladder, dt: float) -> float:
         stream.update(dt)          # let remaining particles finish their arcs
         return 0.0
 
-    target_x, target_y = get_pointer_position()
-    m_pres = mouse_pressure(target_y)
+    mouse_x, mouse_y = get_pointer_position()
+    m_pres = mouse_pressure(mouse_y)
 
     if m_pres <= 0.0:
         stream.emitting = False
         stream.update(dt)
         return 0.0
+
+    # Scale aim offset from origin by sensitivity — less than 1.0 narrows the
+    # deflection range so small mouse movements don't whip the stream around.
+    target_x = STREAM_ORIGIN_X + (mouse_x - STREAM_ORIGIN_X) * AIM_SENSITIVITY
+    target_y = STREAM_ORIGIN_Y + (mouse_y - STREAM_ORIGIN_Y) * AIM_SENSITIVITY
 
     # Re-enable emitting (may have been paused by a previous low-mouse tick)
     stream.emitting = True
