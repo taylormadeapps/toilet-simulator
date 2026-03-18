@@ -6,9 +6,9 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 ASSETS_DIR = PROJECT_ROOT / "assets"
 
-# Display — iPhone 14/15 logical resolution (portrait)
-SCREEN_WIDTH = 390
-SCREEN_HEIGHT = 844
+# Display — iPhone 14/15 logical resolution (portrait), scaled to 80% for desktop
+SCREEN_WIDTH = 312
+SCREEN_HEIGHT = 675
 FPS = 60
 WINDOW_TITLE = "Toilet Simulator"
 
@@ -60,35 +60,33 @@ STREAM_MIN_SPEED = 100.0
 STREAM_SPREAD = 0.08
 STREAM_EMIT_RATE = 3
 STREAM_PARTICLE_RADIUS = 3
-STREAM_MAX_PARTICLES = 200
+STREAM_MAX_PARTICLES = 1500
 
 # --- Bladder ---
 BLADDER_START = 1.0
 BLADDER_DEPLETION_RATE = 0.055
 
-# --- Scoring (penalty model) ---
-SCORE_START = 1000
-SCORE_FLOOR_PENALTY = 5
-SCORE_CENTRE_BONUS = 1
-SCORE_CLEAN_BONUS = 200
-SCORE_MIN = 0
+# --- Scoring ---
+SCORE_BOWL_HIT = 1       # points earned per drop in the bowl
+SCORE_FLOOR_PENALTY = 1  # points lost per floor hit
+SCORE_MIN = 0            # score floor
 
 # --- Layout ---
 BELLY_CENTRE_X = SCREEN_WIDTH // 2
 BELLY_CENTRE_Y = SCREEN_HEIGHT
-BELLY_RADIUS_X = 170
-BELLY_RADIUS_Y = 130
+BELLY_RADIUS_X = 136
+BELLY_RADIUS_Y = 104
 STREAM_ORIGIN_X = SCREEN_WIDTH // 2
 STREAM_ORIGIN_Y = BELLY_CENTRE_Y - BELLY_RADIUS_Y - 5
 
 TOILET_CENTRE_X = SCREEN_WIDTH // 2
-TOILET_CENTRE_Y = 250
-BOWL_RADIUS_X = 80
-BOWL_RADIUS_Y = 180
+TOILET_CENTRE_Y = 200
+BOWL_RADIUS_X = 64
+BOWL_RADIUS_Y = 144
 
 # --- Mouse pressure zone ---
-PRESSURE_ZONE_TOP = 50       # mouse at top = max pressure
-PRESSURE_ZONE_BOTTOM = 770   # mouse near belly = zero flow (much less sensitive)
+PRESSURE_ZONE_TOP = 40       # mouse at top = max pressure
+PRESSURE_ZONE_BOTTOM = 616   # mouse near belly = zero flow (much less sensitive)
 
 FLOOR_TILE_SIZE = 40
 

@@ -7,40 +7,31 @@ from game.settings import SCREEN_WIDTH, SCREEN_HEIGHT
 
 
 def check_collisions(stream: Stream, toilet: Toilet, scoring: Scoring) -> None:
-    """Test each alive particle for bowl or floor collision.
+    """Test each alive particle for bowl hit or miss.
 
-    Only checks particles that are descending (vy > 0). On the way up
-    the stream flies freely — the bowl hitbox is for scoring, not a wall.
-    Floor hits only register once the particle has fallen past the bowl.
+    No gravity — particles travel in straight lines. A particle either enters
+    the bowl ellipse (score) or leaves the screen (miss).
     """
-    # Floor threshold: below the bowl bottom, the particle clearly missed
-    floor_y = toilet.centre_y + toilet.bowl_ry + 10
-
     for particle in stream.particles:
         if not particle.alive:
             continue
 
-        # Off-screen — kill silently regardless of direction
+        # Off-screen in any direction — counts as a miss
         if _is_off_screen(particle.x, particle.y):
-            particle.alive = False
-            continue
-
-        # Only score/kill particles that are falling back down
-        if particle.vy <= 0:
-            continue
-
-        if toilet.is_in_bowl(particle.x, particle.y):
-            # Landed in the bowl — good
-            is_centre = toilet.is_in_centre(particle.x, particle.y)
-            scoring.register_bowl_hit(is_centre=is_centre)
-            stream.kill_particle(particle, spawn_splash=True)
-
-        elif particle.y > floor_y:
-            # Fallen past the bowl — floor hit
             scoring.register_floor_hit()
+            stream.kill_particle(particle, spawn_splash=False)
+            continue
+
+        # Debug: highlight particle while inside the outer bowl visual
+        particle.in_bowl = toilet.is_in_bowl(particle.x, particle.y)
+
+        # Score only when the particle reaches the water zone at the bowl centre.
+        # The outer bowl is visual-only — particles fly through it freely.
+        if toilet.is_in_centre(particle.x, particle.y):
+            scoring.register_bowl_hit(is_centre=True)
             stream.kill_particle(particle, spawn_splash=True)
 
 
 def _is_off_screen(x: float, y: float) -> bool:
-    """Check if a particle has left the screen bounds."""
+    """Check if a particle has left the screen in any direction."""
     return x < -20 or x > SCREEN_WIDTH + 20 or y < -20 or y > SCREEN_HEIGHT + 20

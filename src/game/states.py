@@ -10,8 +10,6 @@ import pygame
 from game.settings import (
     SCREEN_WIDTH, SCREEN_HEIGHT, DARK_BLUE, WHITE, GOLD, GREY, YELLOW, BLACK,
     BLADDER_START, BLADDER_DEPLETION_RATE,
-    SCORE_START, SCORE_FLOOR_PENALTY, SCORE_CENTRE_BONUS,
-    SCORE_CLEAN_BONUS, SCORE_MIN,
     FLOOR_TILE_A, FLOOR_TILE_B, FLOOR_GROUT, FLOOR_TILE_SIZE,
 )
 from entities.player import Player
@@ -98,10 +96,7 @@ class PlayingState:
         self.toilet = Toilet()
         self.stream = Stream(self.player.stream_origin)
         self.bladder = Bladder(BLADDER_START, BLADDER_DEPLETION_RATE)
-        self.scoring = Scoring(
-            SCORE_START, SCORE_FLOOR_PENALTY,
-            SCORE_CENTRE_BONUS, SCORE_CLEAN_BONUS, SCORE_MIN,
-        )
+        self.scoring = Scoring()
         self.hud = HUD()
         self.transition: Optional[str] = None
         self.results_data: Optional[dict] = None
@@ -135,6 +130,8 @@ class PlayingState:
         self.player.draw(surface)
         # 5. HUD (always on top)
         self.hud.draw(surface, self.bladder.volume, self.scoring.score)
+        # 6. Targeting reticle over the hidden cursor
+        _draw_reticle(surface)
 
 
 # ---------------------------------------------------------------------------
@@ -181,13 +178,11 @@ class ResultsState:
         # Stats
         y = 230
         stats = [
-            f"Accuracy: {r['accuracy']:.1f}%",
-            f"Bowl hits: {r['bowl_hits']}",
-            f"Floor hits: {r['floor_hits']}",
-            f"Centre hits: {r['centre_hits']}",
+            f"Accuracy:     {r['accuracy']}%",
+            f"Bowl hits:    {r['bowl_hits']}",
+            f"Centre hits:  {r['centre_hits']}",
+            f"Floor hits:   {r['floor_hits']}",
         ]
-        if r["clean_finish"]:
-            stats.append(f"CLEAN FINISH BONUS: +{SCORE_CLEAN_BONUS}")
 
         for line in stats:
             text = self.font_medium.render(line, True, WHITE)
@@ -216,3 +211,25 @@ def _draw_floor(surface: pygame.Surface) -> None:
                              (x, y, FLOOR_TILE_SIZE, FLOOR_TILE_SIZE))
             pygame.draw.rect(surface, FLOOR_GROUT,
                              (x, y, FLOOR_TILE_SIZE, FLOOR_TILE_SIZE), 1)
+
+
+def _draw_reticle(surface: pygame.Surface) -> None:
+    """Draw a crosshair at the current mouse position."""
+    x, y = pygame.mouse.get_pos()
+    r = 10   # radius of gap in centre
+    arm = 6  # length of each arm beyond the gap
+    colour = (255, 255, 255)
+    shadow = (0, 0, 0)
+
+    lines = [
+        ((x - r - arm, y), (x - r, y)),       # left arm
+        ((x + r, y), (x + r + arm, y)),         # right arm
+        ((x, y - r - arm), (x, y - r)),         # top arm
+        ((x, y + r), (x, y + r + arm)),         # bottom arm
+    ]
+    for start, end in lines:
+        pygame.draw.line(surface, shadow, (start[0]+1, start[1]+1),
+                         (end[0]+1, end[1]+1), 2)
+        pygame.draw.line(surface, colour, start, end, 2)
+    pygame.draw.circle(surface, shadow, (x + 1, y + 1), r, 1)
+    pygame.draw.circle(surface, colour, (x, y), r, 1)

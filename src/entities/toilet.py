@@ -25,9 +25,10 @@ class Toilet:
             self.bowl_ry * 2,
         )
 
-        # Centre zone for bonus scoring (inner 40% of bowl)
-        self.centre_rx = self.bowl_rx * 0.4
-        self.centre_ry = self.bowl_ry * 0.4
+        # Water zone — the actual scoring target (tight circle at bowl centre).
+        # Outer bowl is visual only; particles must reach this zone to score.
+        self.centre_rx: float = 45.0
+        self.centre_ry: float = 45.0
 
     def is_in_bowl(self, x: float, y: float) -> bool:
         """Check if a point is inside the bowl ellipse."""

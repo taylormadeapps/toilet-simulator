@@ -24,6 +24,7 @@ class Particle:
     vx: float
     vy: float
     alive: bool = True
+    in_bowl: bool = False  # debug: True when particle is inside the hitbox
 
 
 @dataclass
@@ -78,11 +79,10 @@ class Stream:
             ))
 
     def update(self, dt: float) -> None:
-        """Move all particles. Apply gravity. Clean up dead ones."""
+        """Move all particles. No gravity — stream travels in a straight line."""
         for p in self.particles:
             if not p.alive:
                 continue
-            p.vy += GRAVITY * dt
             p.x += p.vx * dt
             p.y += p.vy * dt
 
@@ -120,8 +120,9 @@ class Stream:
 
         for p in self.particles:
             if p.alive:
+                p_colour = (255, 0, 0) if p.in_bowl else colour
                 pygame.draw.circle(
-                    surface, colour,
+                    surface, p_colour,
                     (int(p.x), int(p.y)),
                     STREAM_PARTICLE_RADIUS,
                 )

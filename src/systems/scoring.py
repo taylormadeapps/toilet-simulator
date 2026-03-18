@@ -1,45 +1,37 @@
-"""Penalty-based scoring system."""
+"""Earn-up scoring system."""
+
+from game.settings import SCORE_BOWL_HIT, SCORE_FLOOR_PENALTY, SCORE_MIN
 
 
 class Scoring:
-    """Start at max score, lose points for floor hits."""
+    """Start at 0. +1 per bowl hit, -1 per floor hit (floored at 0)."""
 
-    def __init__(self, start_score: int, floor_penalty: int,
-                 centre_bonus: int, clean_bonus: int, min_score: int) -> None:
-        self.score = start_score
-        self.floor_penalty = floor_penalty
-        self.centre_bonus = centre_bonus
-        self.clean_bonus = clean_bonus
-        self.min_score = min_score
-        self.floor_hits = 0
-        self.bowl_hits = 0
-        self.centre_hits = 0
-
-    def register_floor_hit(self) -> None:
-        """Particle hit the floor. Apply penalty."""
-        self.floor_hits += 1
-        self.score = max(self.min_score, self.score - self.floor_penalty)
+    def __init__(self) -> None:
+        self.score: int = 0
+        self.bowl_hits: int = 0
+        self.floor_hits: int = 0
+        self.centre_hits: int = 0
 
     def register_bowl_hit(self, is_centre: bool = False) -> None:
-        """Particle hit the bowl. Optional centre bonus."""
+        """Particle landed in the bowl."""
+        self.score += SCORE_BOWL_HIT
         self.bowl_hits += 1
         if is_centre:
             self.centre_hits += 1
-            self.score = min(self.score + self.centre_bonus, 9999)
+
+    def register_floor_hit(self) -> None:
+        """Particle hit the floor — deduct a point, never below zero."""
+        self.score = max(SCORE_MIN, self.score - SCORE_FLOOR_PENALTY)
+        self.floor_hits += 1
 
     def finalise(self) -> dict:
-        """Calculate final score with bonuses. Call at level end."""
-        final = self.score
-        clean = self.floor_hits == 0
-        if clean:
-            final += self.clean_bonus
-        total_particles = self.floor_hits + self.bowl_hits
-        accuracy = (self.bowl_hits / total_particles * 100) if total_particles > 0 else 0
+        """Compute end-of-level stats. Call once when the level ends."""
+        total = self.bowl_hits + self.floor_hits
+        accuracy = round(self.bowl_hits / total * 100) if total > 0 else 0
         return {
-            "score": final,
-            "floor_hits": self.floor_hits,
-            "bowl_hits": self.bowl_hits,
-            "centre_hits": self.centre_hits,
+            "score": self.score,
             "accuracy": accuracy,
-            "clean_finish": clean,
+            "bowl_hits": self.bowl_hits,
+            "floor_hits": self.floor_hits,
+            "centre_hits": self.centre_hits,
         }
