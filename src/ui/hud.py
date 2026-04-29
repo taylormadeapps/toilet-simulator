@@ -3,7 +3,7 @@
 import pygame
 
 from game.settings import (
-    SCREEN_WIDTH, HUD_BLADDER_FULL, HUD_BLADDER_EMPTY,
+    SCREEN_WIDTH, SCREEN_HEIGHT, HUD_BLADDER_FULL, HUD_BLADDER_EMPTY,
     HUD_TEXT, HUD_BG, WHITE, BLACK,
 )
 
@@ -15,18 +15,30 @@ class HUD:
         self.font = pygame.font.SysFont("Arial", 24, bold=True)
         self.font_small = pygame.font.SysFont("Arial", 18)
 
-    def draw(self, surface: pygame.Surface, bladder_pct: float, score: int) -> None:
+    def draw(
+        self, surface: pygame.Surface, bladder_pct: float, score: int,
+        level_name: str = "",
+    ) -> None:
         """Draw all HUD elements."""
         self._draw_bladder_meter(surface, bladder_pct)
         self._draw_score(surface, score)
+        if level_name:
+            self._draw_level_name(surface, level_name)
+
+    def _draw_level_name(self, surface: pygame.Surface, name: str) -> None:
+        """Level name in the top-left corner with a drop shadow."""
+        shadow = self.font_small.render(name, True, BLACK)
+        text   = self.font_small.render(name, True, (220, 220, 220))
+        surface.blit(shadow, (22, 22))
+        surface.blit(text,   (20, 20))
 
     def _draw_bladder_meter(self, surface: pygame.Surface,
                             bladder_pct: float) -> None:
         """Vertical bar on the left side of screen."""
         bar_x = 20
-        bar_y = 180
         bar_w = 24
         bar_h = 200
+        bar_y = SCREEN_HEIGHT - bar_h - 30  # bottom-left, room for label below
 
         # Background
         pygame.draw.rect(surface, HUD_BG, (bar_x, bar_y, bar_w, bar_h))
@@ -48,10 +60,10 @@ class HUD:
     def _draw_score(self, surface: pygame.Surface, score: int) -> None:
         """Score display in top-right corner."""
         text = self.font.render(f"Score: {score}", True, WHITE)
-        rect = text.get_rect(topright=(SCREEN_WIDTH - 20, 20))
+        rect = text.get_rect(bottomright=(SCREEN_WIDTH - 20, SCREEN_HEIGHT - 20))
         # Drop shadow
         shadow = self.font.render(f"Score: {score}", True, BLACK)
-        shadow_rect = shadow.get_rect(topright=(SCREEN_WIDTH - 18, 22))
+        shadow_rect = shadow.get_rect(bottomright=(SCREEN_WIDTH - 18, SCREEN_HEIGHT - 18))
         surface.blit(shadow, shadow_rect)
         surface.blit(text, rect)
 

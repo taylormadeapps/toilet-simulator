@@ -10,10 +10,8 @@ from game.settings import (
     STREAM_ORIGIN_X, STREAM_ORIGIN_Y,
 )
 
-# Moob colours — slightly pinker than belly skin
-MOOB_COLOUR = (230, 180, 148)
-MOOB_SHADOW = (205, 158, 128)
-NIPPLE_COLOUR = (195, 140, 115)
+MOOB_COLOUR = (228, 178, 145)
+NIPPLE_COLOUR = (172, 112, 88)
 CHEST_HAIR = (90, 65, 45)
 
 
@@ -28,66 +26,119 @@ class Player:
         self.stream_origin = (STREAM_ORIGIN_X, STREAM_ORIGIN_Y)
 
     def draw(self, surface: pygame.Surface) -> None:
-        """Draw the belly from a top-down perspective."""
-        # Shirt edge (slightly larger ellipse behind belly)
-        shirt_rect = pygame.Rect(0, 0, self.belly_rx * 2 + 30, self.belly_ry * 2 + 20)
-        shirt_rect.center = (self.belly_cx, self.belly_cy)
-        pygame.draw.ellipse(surface, SHIRT_COLOUR, shirt_rect)
+        """Draw the player from top-down: trousers, belly, then moob semi-ellipses."""
+        belly_top = self.belly_cy - self.belly_ry  # ≈ y 571
 
-        # Belly (main skin ellipse)
+        # 1. Trouser/waistband outline — blue ellipse just larger than belly
+        waist_rect = pygame.Rect(0, 0, self.belly_rx * 2 + 28, self.belly_ry * 2 + 28)
+        waist_rect.center = (self.belly_cx, self.belly_cy)
+        pygame.draw.ellipse(surface, SHIRT_COLOUR, waist_rect)
+
+        # 2. Belly skin
         belly_rect = pygame.Rect(0, 0, self.belly_rx * 2, self.belly_ry * 2)
         belly_rect.center = (self.belly_cx, self.belly_cy)
         pygame.draw.ellipse(surface, SKIN_COLOUR, belly_rect)
 
-        # Belly shadow (upper arc for depth — looking down)
-        shadow_rect = pygame.Rect(0, 0, self.belly_rx * 2 - 20, self.belly_ry + 10)
-        shadow_rect.center = (self.belly_cx, self.belly_cy - 30)
-        pygame.draw.ellipse(surface, SKIN_SHADOW, shadow_rect)
+        # Belly art
+        _draw_belly_art(surface, self.belly_cx, self.belly_cy, self.belly_rx, self.belly_ry)
 
-        # --- Moobs (two fleshy mounds at the top of the belly) ---
-        moob_rx = 52
-        moob_ry = 36
-        moob_y = self.belly_cy - self.belly_ry + 20   # sit near top of belly
-        moob_spread = 48                                # distance from centre
+        # 3. Moobs — shallow semi-ellipses drawn ON the lower visible belly
+        #    Flat base faces down (toward screen bottom); dome rises toward toilet.
+        #    Nipples sit at the apex of each dome.
+        moob_hw = 56    # half-width per moob
+        moob_h = 36     # dome height — shallow for a man's chest
+        moob_sep = 8    # gap between the two moobs at the centre
+        # Flat base at screen bottom edge — moobs are flush with bottom of screen
+        flat_y = self.belly_cy + 4  # slightly off-screen so the flat line is hidden
 
-        for side in (-1, 1):
-            mx = self.belly_cx + side * moob_spread
-            # Main moob shape
-            moob_rect = pygame.Rect(0, 0, moob_rx * 2, moob_ry * 2)
-            moob_rect.center = (mx, moob_y)
-            pygame.draw.ellipse(surface, MOOB_COLOUR, moob_rect)
-            # Underboob shadow crease
-            crease_rect = pygame.Rect(0, 0, moob_rx * 2 - 10, moob_ry)
-            crease_rect.center = (mx, moob_y + moob_ry // 2 + 4)
-            pygame.draw.ellipse(surface, MOOB_SHADOW, crease_rect)
-            # Nipple
-            pygame.draw.circle(surface, NIPPLE_COLOUR, (mx, moob_y + 4), 5)
+        left_cx = self.belly_cx - moob_sep // 2 - moob_hw
+        right_cx = self.belly_cx + moob_sep // 2 + moob_hw
 
-        # --- Chest hair ---
-        _draw_chest_hair(surface, self.belly_cx, moob_y, moob_spread)
+        for cx in (left_cx, right_cx):
+            _draw_semi_ellipse(surface, cx, flat_y, moob_hw, moob_h, MOOB_COLOUR)
+            # Nipple at apex — the point of the dome closest to the toilet
+            pygame.draw.circle(surface, NIPPLE_COLOUR, (cx, flat_y - moob_h), 5)
+            pygame.draw.circle(surface, (145, 85, 65), (cx, flat_y - moob_h), 3)
+            # A few hairs scattered on each moob surface
+            _draw_moob_hair(surface, cx, flat_y, moob_h)
+
+        # 4. Chest hair in the cleavage valley
+        _draw_chest_hair(surface, self.belly_cx, flat_y - moob_h // 2)
 
 
-def _draw_chest_hair(
-    surface: pygame.Surface, cx: int, cy: int, spread: int,
+def _draw_semi_ellipse(
+    surface: pygame.Surface, cx: int, base_y: int, rx: int, ry: int, colour: tuple,
 ) -> None:
-    """Scatter short curly hairs between and around the moobs."""
-    # Deterministic pattern — no randomness, same every frame
+    """Fill the upper half of an ellipse. Flat base at base_y, dome curves upward."""
+    # Sweep angles 0→180°; polygon auto-closes with the flat base line.
+    points = [
+        (int(cx + rx * math.cos(math.radians(a))),
+         int(base_y - ry * math.sin(math.radians(a))))
+        for a in range(0, 181)
+    ]
+    pygame.draw.polygon(surface, colour, points)
+
+
+def _draw_belly_art(
+    surface: pygame.Surface, cx: int, cy: int, rx: int, ry: int,
+) -> None:
+    """Draw belly button and stretch marks on the belly."""
+    belly_button_colour = (180, 120, 95)
+    stretch_colour = (210, 160, 130)
+
+    # Belly button right at the top edge of the belly
+    bb_y = cy - ry + 5
+    stretch_colour = (220, 175, 148)  # very faint — barely visible
+
+    # Short faint wrinkles radiating down from the button
+    marks = [
+        (-8,  2, -18,  8),
+        ( 8,  2,  18,  8),
+        (-14, 6, -28, 14),
+        ( 14, 6,  28, 14),
+        (  0, 8,   0, 20),
+    ]
+    for sx, sy, ex, ey in marks:
+        pygame.draw.line(surface, stretch_colour, (cx + sx, bb_y + sy), (cx + ex, bb_y + ey), 1)
+
+    # Belly button — innie dent at the edge
+    pygame.draw.ellipse(surface, SKIN_SHADOW, (cx - 7, bb_y - 5, 14, 10))   # rim
+    pygame.draw.ellipse(surface, belly_button_colour, (cx - 5, bb_y - 3, 10, 7))  # fold
+    pygame.draw.ellipse(surface, (155, 100, 75), (cx - 3, bb_y - 2, 6, 4))  # dent
+
+
+def _draw_moob_hair(
+    surface: pygame.Surface, cx: int, base_y: int, moob_h: int,
+) -> None:
+    """Sparse hairs on the surface of one moob."""
+    # Offsets relative to moob centre-x and a point mid-way up the dome
+    mid_y = base_y - moob_h // 2
     hair_spots = [
         # (offset_x, offset_y, angle_deg, length)
-        # Between moobs (the chest valley)
-        (0, -8, -20, 8), (0, 0, 15, 7), (0, 8, -10, 9),
-        (-6, -4, 30, 7), (6, -4, -30, 7),
-        (-4, 12, 10, 8), (4, 12, -15, 8),
-        (0, 20, 5, 7), (-5, 24, -20, 6), (5, 24, 25, 6),
-        # Around left moob
-        (-spread - 10, -10, 40, 6), (-spread + 5, -16, -25, 7),
-        (-spread - 15, 8, 15, 6), (-spread + 10, 18, -30, 5),
-        # Around right moob
-        (spread + 10, -10, -40, 6), (spread - 5, -16, 25, 7),
-        (spread + 15, 8, -15, 6), (spread - 10, 18, 30, 5),
-        # Below moobs, trailing down belly
-        (-12, 34, 10, 7), (0, 36, -5, 8), (12, 34, -12, 7),
-        (-8, 46, 20, 6), (8, 46, -20, 6), (0, 50, 0, 7),
+        (-18, -4,  20, 7), ( 18, -4, -20, 7),
+        ( -8, -12, -15, 6), (  8, -12,  15, 6),
+        (  0, -18,  10, 7),
+        (-22,  6,   30, 5), ( 22,  6,  -30, 5),
+    ]
+    for ox, oy, angle, length in hair_spots:
+        x = cx + ox
+        y = mid_y + oy
+        rad = math.radians(angle)
+        ex = x + math.cos(rad) * length
+        ey = y + math.sin(rad) * length
+        pygame.draw.line(surface, CHEST_HAIR, (x, y), (int(ex), int(ey)), 1)
+
+
+def _draw_chest_hair(surface: pygame.Surface, cx: int, cy: int) -> None:
+    """Short hairs in the cleavage valley and trailing down the belly."""
+    hair_spots = [
+        # Central cleavage valley
+        ( 0, -6, -20, 8), ( 0,  2,  15, 7), ( 0, 10, -10, 9),
+        (-5, -2,  30, 7), ( 5, -2, -30, 7),
+        (-4, 14,  10, 8), ( 4, 14, -15, 8),
+        # Trailing down the belly below the cleavage
+        (-8, 30,  10, 7), ( 0, 32,  -5, 8), ( 8, 30, -12, 7),
+        (-5, 44,  20, 6), ( 5, 44, -20, 6), ( 0, 48,   0, 7),
     ]
     for ox, oy, angle, length in hair_spots:
         x = cx + ox

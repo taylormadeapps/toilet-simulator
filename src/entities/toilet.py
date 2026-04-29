@@ -45,13 +45,7 @@ class Toilet:
 
     def draw(self, surface: pygame.Surface) -> None:
         """Draw toilet from top-down view."""
-        # Toilet base/tank (rectangle behind bowl)
-        base_rect = pygame.Rect(0, 0, self.bowl_rx * 2 + 40, 50)
-        base_rect.center = (self.centre_x, self.centre_y - self.bowl_ry - 20)
-        pygame.draw.rect(surface, TOILET_BASE, base_rect, border_radius=8)
-        pygame.draw.rect(surface, BOWL_RIM, base_rect, width=2, border_radius=8)
-
-        # Seat (larger ellipse behind bowl)
+        # Seat (larger ellipse — drawn first, behind everything)
         seat_rect = pygame.Rect(0, 0, self.bowl_rx * 2 + 24, self.bowl_ry * 2 + 24)
         seat_rect.center = (self.centre_x, self.centre_y)
         pygame.draw.ellipse(surface, TOILET_BASE, seat_rect)
@@ -79,3 +73,9 @@ class Toilet:
         )
         hitbox_rect.center = (self.centre_x, self.centre_y)
         pygame.draw.ellipse(surface, CENTRE_ZONE_COLOUR, hitbox_rect)
+
+        # Cistern — drawn last so it sits on top of the bowl at the back
+        cistern_rect = pygame.Rect(0, 0, self.bowl_rx * 2 + 40, 50)
+        cistern_rect.center = (self.centre_x, self.centre_y - self.bowl_ry - 20)
+        pygame.draw.rect(surface, TOILET_BASE, cistern_rect, border_radius=8)
+        pygame.draw.rect(surface, BOWL_RIM, cistern_rect, width=2, border_radius=8)

@@ -2,7 +2,17 @@
   "permissions": {
     "allow": [
       "Bash(pip list:*)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Bash(python -m pip list)",
+      "Bash(python src/main.py)",
+      "Bash(taskkill /F /IM python.exe)",
+      "Bash(exit 0)",
+      "Bash(ping -n 4 127.0.0.1)",
+      "Bash(python -c \"import src.entities.player\")",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(python -c \":*)"
     ]
   }
 }

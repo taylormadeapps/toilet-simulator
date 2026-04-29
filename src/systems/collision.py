@@ -8,12 +8,18 @@ from systems.scoring import Scoring
 from game.settings import SCREEN_WIDTH, SCREEN_HEIGHT, STREAM_LAND_SPEED
 
 
-def check_collisions(stream: Stream, toilet: Toilet, scoring: Scoring) -> None:
-    """Score particles when they land (decelerate to ~zero speed).
+def check_collisions(
+    stream: Stream, toilet: Toilet, scoring: Scoring,
+) -> tuple[int, int, list[tuple[float, float]]]:
+    """Score particles when they land.
 
-    Particles follow a decelerating arc simulating the z-axis. When speed
-    drops to near-zero the particle has landed — score based on position.
+    Returns (bowl_hits, centre_hits, floor_positions) this frame.
+    floor_positions is a list of (x, y) landing coords for every floor hit
+    so callers can render puddles at the exact landing spots.
     """
+    bowl_hits = 0
+    centre_hits = 0
+    floor_positions: list[tuple[float, float]] = []
     for particle in stream.particles:
         if not particle.alive:
             continue
@@ -22,6 +28,10 @@ def check_collisions(stream: Stream, toilet: Toilet, scoring: Scoring) -> None:
         if _is_off_screen(particle.x, particle.y):
             scoring.register_floor_hit()
             stream.kill_particle(particle, spawn_splash=False)
+            # Clamp off-screen hits to the nearest edge so the splat stays visible
+            cx = max(0.0, min(particle.x, SCREEN_WIDTH))
+            cy = max(0.0, min(particle.y, SCREEN_HEIGHT))
+            floor_positions.append((cx, cy))
             continue
 
         # Particle has landed when speed reaches ~zero
@@ -30,9 +40,15 @@ def check_collisions(stream: Stream, toilet: Toilet, scoring: Scoring) -> None:
                 is_centre = toilet.is_in_centre(particle.x, particle.y)
                 scoring.register_bowl_hit(is_centre=is_centre)
                 stream.kill_particle(particle, spawn_splash=True)
+                if is_centre:
+                    centre_hits += 1
+                else:
+                    bowl_hits += 1
             else:
                 scoring.register_floor_hit()
                 stream.kill_particle(particle, spawn_splash=False)
+                floor_positions.append((particle.x, particle.y))
+    return bowl_hits, centre_hits, floor_positions
 
 
 def _is_off_screen(x: float, y: float) -> bool:
