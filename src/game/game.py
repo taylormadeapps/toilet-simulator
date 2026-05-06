@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import sys
 
 import pygame
@@ -34,7 +35,7 @@ class Game:
     # Main loop
     # ------------------------------------------------------------------
 
-    def run(self) -> None:
+    async def run(self) -> None:
         """Fixed-timestep accumulator loop."""
         accumulator = 0.0
 
@@ -67,8 +68,10 @@ class Game:
             # State transitions
             self._check_transitions()
 
+            # Yield to the browser event loop (required by pygbag)
+            await asyncio.sleep(0)
+
         pygame.quit()
-        sys.exit()
 
     # ------------------------------------------------------------------
     # State machine
@@ -138,4 +141,7 @@ class Game:
 def _grab_mouse(grab: bool) -> None:
     """Hide cursor and confine mouse to window, or release."""
     pygame.mouse.set_visible(not grab)
-    pygame.event.set_grab(grab)
+    try:
+        pygame.event.set_grab(grab)
+    except Exception:
+        pass  # not supported in browser

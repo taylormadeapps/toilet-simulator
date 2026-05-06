@@ -1,5 +1,6 @@
 """Toilet Simulator — Entry Point."""
 
+import asyncio
 import ctypes
 import sys
 
@@ -15,11 +16,11 @@ def _set_dpi_aware() -> None:
             pass
 
 
-def main() -> None:
+async def main() -> None:
     _set_dpi_aware()
     game = Game()
-    game.run()
+    await game.run()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

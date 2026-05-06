@@ -2,9 +2,13 @@
 
 from pathlib import Path
 
+import sys as _sys
+
 # Paths
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-ASSETS_DIR = PROJECT_ROOT / "assets"
+# On WASM (pygbag), assets are extracted to /assets in the virtual filesystem.
+# On desktop they live at the project root.
+ASSETS_DIR = Path("/assets") if _sys.platform == "emscripten" else PROJECT_ROOT / "assets"
 
 # Display — iPhone 14/15 logical resolution (portrait), scaled to 80% for desktop
 SCREEN_WIDTH = 312

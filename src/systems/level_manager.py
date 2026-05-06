@@ -87,8 +87,11 @@ class LevelManager:
             _SAVE_PATH.unlink()
 
     def _save(self) -> None:
-        _SAVE_PATH.parent.mkdir(parents=True, exist_ok=True)
-        _SAVE_PATH.write_text(json.dumps({
-            "unlocked": self._unlocked,
-            "best_stars": self._best_stars,
-        }))
+        try:
+            _SAVE_PATH.parent.mkdir(parents=True, exist_ok=True)
+            _SAVE_PATH.write_text(json.dumps({
+                "unlocked": self._unlocked,
+                "best_stars": self._best_stars,
+            }))
+        except Exception:
+            pass  # no filesystem on web
