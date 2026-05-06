@@ -18,14 +18,17 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install dependencies
+      - name: Install system dependencies
+        run: sudo apt-get install -y xvfb libsdl2-dev
+
+      - name: Install Python dependencies
         run: pip install pygame-ce pygbag
 
       - name: Copy assets into src for bundling
         run: cp -r assets src/assets
 
       - name: Build web version
-        run: python -m pygbag --build --app_name "Toilet Simulator" src/main.py
+        run: xvfb-run -a python -u -m pygbag --build --app_name "Toilet Simulator" src/main.py
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
