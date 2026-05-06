@@ -204,6 +204,12 @@ class PlayingState:
                     self.pee_audio.stop()
                     self.floor_audio.stop()
                     self.transition = "splash"
+            # Touch fallback: tapping the top-left level name quits to menu.
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if self.hud.level_name_rect.collidepoint(event.pos):
+                    self.pee_audio.stop()
+                    self.floor_audio.stop()
+                    self.transition = "splash"
 
     def update(self, dt: float) -> None:
         # Hold off emission for the first second so the level has a moment to load
@@ -352,6 +358,9 @@ class LevelSelectState:
 
         # Reset button — bottom left corner
         self._btn_reset = pygame.Rect(self._PAD, SCREEN_HEIGHT - 38, 100, 26)
+        # Back hint at bottom-centre, also acts as a tap target on iPad.
+        self._btn_back = pygame.Rect(0, 0, 120, 26)
+        self._btn_back.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT - 22)
 
         # Confirmation dialog buttons
         dialog_cx = SCREEN_WIDTH // 2
@@ -392,6 +401,8 @@ class LevelSelectState:
                 else:
                     if self._btn_reset.collidepoint(pos):
                         self._confirming = True
+                    elif self._btn_back.collidepoint(pos):
+                        self.transition = "splash"
                     else:
                         for rect, level_idx in zip(self._rows, self._indices):
                             if rect.collidepoint(pos):
@@ -429,8 +440,9 @@ class LevelSelectState:
             star_color = GOLD if stars > 0 else (70, 80, 100)
             _draw_star_row(surface, rect.right - 38, rect.centery, stars, 6, star_color)
 
-        hint = self.font_hint.render("ESC — back", True, GREY)
-        surface.blit(hint, hint.get_rect(centerx=cx, y=SCREEN_HEIGHT - 22))
+        hover_back = self._btn_back.collidepoint(mouse)
+        hint = self.font_hint.render("← BACK", True, GOLD if hover_back else GREY)
+        surface.blit(hint, hint.get_rect(center=self._btn_back.center))
 
         # Reset button
         hover_reset = self._btn_reset.collidepoint(mouse) and not self._confirming
@@ -478,16 +490,34 @@ class ResultsState:
         self.font_large  = _sysfont("Arial", 34, bold=True)
         self.font_medium = _sysfont("Arial", 24)
         self.font_small  = _sysfont("Arial", 18)
+        self.font_btn    = _sysfont("Arial", 16, bold=True)
 
         self.frame = 0
         self.transition: Optional[str] = None
 
+        # Action buttons — sized for touch targets, also act as keyboard
+        # shortcut indicators on desktop. Primary = next-level or retry.
+        cx = SCREEN_WIDTH // 2
+        self._btn_primary = pygame.Rect(0, 0, 220, 44)
+        self._btn_primary.center = (cx, SCREEN_HEIGHT - 78)
+        self._btn_levels = pygame.Rect(0, 0, 105, 36)
+        self._btn_levels.center = (cx - 56, SCREEN_HEIGHT - 30)
+        self._btn_menu = pygame.Rect(0, 0, 105, 36)
+        self._btn_menu.center  = (cx + 56, SCREEN_HEIGHT - 30)
+
+    @property
+    def _primary_action(self) -> str:
+        return "next_level" if self.results.get("can_advance") else "retry"
+
+    @property
+    def _primary_label(self) -> str:
+        return "NEXT LEVEL" if self.results.get("can_advance") else "RETRY"
+
     def handle_events(self, events: list[pygame.event.Event]) -> None:
-        r = self.results
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    self.transition = "next_level" if r.get("can_advance") else "retry"
+                    self.transition = self._primary_action
                 elif event.key == pygame.K_r:
                     self.transition = "retry"
                 elif event.key == pygame.K_l:
@@ -495,7 +525,13 @@ class ResultsState:
                 elif event.key == pygame.K_ESCAPE:
                     self.transition = "splash"
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                self.transition = "next_level" if r.get("can_advance") else "retry"
+                pos = event.pos
+                if self._btn_primary.collidepoint(pos):
+                    self.transition = self._primary_action
+                elif self._btn_levels.collidepoint(pos):
+                    self.transition = "level_select"
+                elif self._btn_menu.collidepoint(pos):
+                    self.transition = "splash"
 
     def update(self, dt: float) -> None:
         self.frame += 1
@@ -571,17 +607,19 @@ class ResultsState:
             surface.blit(t, t.get_rect(centerx=cx, y=y))
             y += 22
 
-        # Blinking prompt
-        if (self.frame // 30) % 2 == 0:
-            if r.get("can_advance"):
-                lines = ["SPACE — next level", "R — retry   L — levels   ESC — menu"]
-            else:
-                lines = ["SPACE / R — retry", "L — levels   ESC — menu"]
-            py = SCREEN_HEIGHT - 60
-            for line in lines:
-                t = self.font_small.render(line, True, YELLOW)
-                surface.blit(t, t.get_rect(centerx=cx, y=py))
-                py += 24
+        # Action buttons — touch-friendly, also keyboard shortcut targets.
+        mouse = pygame.mouse.get_pos()
+        for rect, label, hover_colour, idle_colour in (
+            (self._btn_primary, self._primary_label, GOLD, (200, 160, 30)),
+            (self._btn_levels,  "LEVELS",            WHITE, (80, 90, 110)),
+            (self._btn_menu,    "MENU",              WHITE, (80, 90, 110)),
+        ):
+            hovered = rect.collidepoint(mouse)
+            pygame.draw.rect(surface, hover_colour if hovered else idle_colour,
+                             rect, border_radius=8)
+            t = self.font_btn.render(label, True, DARK_BLUE)
+            surface.blit(t, t.get_rect(center=rect.center))
+
 
 
 # ---------------------------------------------------------------------------

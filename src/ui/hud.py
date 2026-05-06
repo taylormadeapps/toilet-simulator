@@ -20,6 +20,9 @@ class HUD:
     def __init__(self) -> None:
         self.font = _sysfont("Arial", 24, bold=True)
         self.font_small = _sysfont("Arial", 18)
+        # Generous click zone over the top-left level name — used as a
+        # touch-friendly "quit to menu" target on iPad (no ESC key there).
+        self.level_name_rect = pygame.Rect(0, 0, 200, 60)
 
     def draw(
         self, surface: pygame.Surface, bladder_pct: float, score: int,
