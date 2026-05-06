@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import json
+import sys
 
 from game.levels import LEVELS, PASS_STARS
 from game.settings import PROJECT_ROOT
 
 _SAVE_PATH = PROJECT_ROOT / "saves" / "progress.json"
+_LS_KEY = "toiletsim_progress"
 
 
 class LevelManager:
@@ -68,30 +70,49 @@ class LevelManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        if not _SAVE_PATH.exists():
-            return
         try:
-            data = json.loads(_SAVE_PATH.read_text())
+            if sys.platform == "emscripten":
+                from js import localStorage  # type: ignore[import]
+                raw = localStorage.getItem(_LS_KEY)
+                if raw is None:
+                    return
+                data = json.loads(str(raw))
+            else:
+                if not _SAVE_PATH.exists():
+                    return
+                data = json.loads(_SAVE_PATH.read_text())
             self._unlocked = int(data.get("unlocked", 0))
             for i, s in enumerate(data.get("best_stars", [])[:len(LEVELS)]):
                 self._best_stars[i] = float(s)
         except Exception:
-            pass  # corrupt save — start fresh
+            pass  # corrupt or missing save — start fresh
 
     def reset(self) -> None:
-        """Wipe all progress and delete the save file."""
+        """Wipe all progress."""
         self.current_level = 0
         self._unlocked = 0
         self._best_stars = [0.0] * len(LEVELS)
-        if _SAVE_PATH.exists():
-            _SAVE_PATH.unlink()
+        try:
+            if sys.platform == "emscripten":
+                from js import localStorage  # type: ignore[import]
+                localStorage.removeItem(_LS_KEY)
+            else:
+                if _SAVE_PATH.exists():
+                    _SAVE_PATH.unlink()
+        except Exception:
+            pass
 
     def _save(self) -> None:
+        payload = json.dumps({
+            "unlocked": self._unlocked,
+            "best_stars": self._best_stars,
+        })
         try:
-            _SAVE_PATH.parent.mkdir(parents=True, exist_ok=True)
-            _SAVE_PATH.write_text(json.dumps({
-                "unlocked": self._unlocked,
-                "best_stars": self._best_stars,
-            }))
+            if sys.platform == "emscripten":
+                from js import localStorage  # type: ignore[import]
+                localStorage.setItem(_LS_KEY, payload)
+            else:
+                _SAVE_PATH.parent.mkdir(parents=True, exist_ok=True)
+                _SAVE_PATH.write_text(payload)
         except Exception:
-            pass  # no filesystem on web
+            pass
