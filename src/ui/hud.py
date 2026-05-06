@@ -1,19 +1,25 @@
 """Heads-up display — bladder meter, score."""
 
+from __future__ import annotations
+
 import pygame
 
 from game.settings import (
     SCREEN_WIDTH, SCREEN_HEIGHT, HUD_BLADDER_FULL, HUD_BLADDER_EMPTY,
-    HUD_TEXT, HUD_BG, WHITE, BLACK,
+    HUD_TEXT, HUD_BG, WHITE, BLACK, FONT_SCALE,
 )
+
+
+def _sysfont(name: str, size: int, bold: bool = False) -> pygame.font.Font:
+    return pygame.font.SysFont(name, int(round(size * FONT_SCALE)), bold=bold)
 
 
 class HUD:
     """Draws bladder meter and score during gameplay."""
 
     def __init__(self) -> None:
-        self.font = pygame.font.SysFont("Arial", 24, bold=True)
-        self.font_small = pygame.font.SysFont("Arial", 18)
+        self.font = _sysfont("Arial", 24, bold=True)
+        self.font_small = _sysfont("Arial", 18)
 
     def draw(
         self, surface: pygame.Surface, bladder_pct: float, score: int,

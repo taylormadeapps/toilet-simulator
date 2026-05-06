@@ -6,15 +6,22 @@ import sys as _sys
 
 # Paths
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-# On WASM (pygbag), assets are extracted to /assets in the virtual filesystem.
-# On desktop they live at the project root.
-ASSETS_DIR = Path("/assets") if _sys.platform == "emscripten" else PROJECT_ROOT / "assets"
+# Web (pygbag): the lll skill / CI stages everything (code + audio) into
+# src/assets/, and pygbag cd's into that folder at runtime — so audio sits
+# at the cwd, not at any absolute /assets path.
+# Desktop: assets live alongside the repo root.
+ASSETS_DIR = Path.cwd() if _sys.platform == "emscripten" else PROJECT_ROOT / "assets"
 
 # Display — iPhone 14/15 logical resolution (portrait), scaled to 80% for desktop
 SCREEN_WIDTH = 312
 SCREEN_HEIGHT = 675
 FPS = 60
 WINDOW_TITLE = "Toilet Simulator"
+
+# pygbag's pygame can't find "Arial" and falls back to a default font that
+# renders larger at the same nominal point size. Shrink fonts on web so the
+# UI matches the desktop layout.
+FONT_SCALE = 0.75 if _sys.platform == "emscripten" else 1.0
 
 # --- Colours (R, G, B) ---
 

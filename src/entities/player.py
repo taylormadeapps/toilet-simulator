@@ -1,5 +1,7 @@
 """Player entity — the belly and stream origin."""
 
+from __future__ import annotations
+
 import math
 
 import pygame

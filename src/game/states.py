@@ -7,15 +7,18 @@ import random
 from pathlib import Path
 from typing import Optional
 
-import numpy as np
 import pygame
 
 from game.settings import (
     SCREEN_WIDTH, SCREEN_HEIGHT, DARK_BLUE, WHITE, GOLD, GREY, YELLOW, BLACK,
     FLOOR_TILE_A, FLOOR_TILE_B, FLOOR_GROUT, FLOOR_TILE_SIZE,
     PUDDLE_COLOUR,
-    ASSETS_DIR,
+    ASSETS_DIR, FONT_SCALE,
 )
+
+
+def _sysfont(name: str, size: int, bold: bool = False) -> pygame.font.Font:
+    return pygame.font.SysFont(name, int(round(size * FONT_SCALE)), bold=bold)
 from game.levels import PASS_STARS
 from entities.player import Player
 from entities.toilet import Toilet
@@ -30,10 +33,16 @@ from systems.audio import PeeAudio, FloorAudio
 
 
 def _stretch_sound(path: Path, factor: float) -> pygame.mixer.Sound:
-    """Load a WAV and time-stretch it by factor (e.g. 1.25 = 20% slower)."""
+    """Load a sound file and time-stretch it by factor (e.g. 1.25 = 20% slower).
+
+    numpy is imported lazily here so module load doesn't fail on web before
+    pygbag has had a chance to fetch the numpy wheel.
+    """
+    import numpy as np  # lazy: pygbag preloads numpy by the time this is called
     snd = pygame.mixer.Sound(str(path))
     arr = pygame.sndarray.array(snd).astype(np.float32)
     # arr shape: (num_samples,) mono or (num_samples, 2) stereo
+    import numpy as np  # already imported lazily above; keep local refs concise
     n_in = arr.shape[0]
     n_out = int(round(n_in * factor))
     x_in = np.arange(n_in, dtype=np.float32)
@@ -55,16 +64,16 @@ def _stretch_sound(path: Path, factor: float) -> pygame.mixer.Sound:
 class SplashState:
     """Title screen."""
 
-    _SND_DIR = ASSETS_DIR / "pee sounds"
+    _SND_DIR = ASSETS_DIR / "sounds"
     _KNOCK_OFFSET = 2.0
 
     def __init__(self, level_manager=None) -> None:
         self.frame = 0
         self._lm = level_manager
         self._has_progress = level_manager is not None and level_manager._unlocked > 0
-        self.font_title  = pygame.font.SysFont("Arial", 48, bold=True)
-        self.font_btn    = pygame.font.SysFont("Arial", 20, bold=True)
-        self.font_sub    = pygame.font.SysFont("Arial", 15)
+        self.font_title  = _sysfont("Arial", 48, bold=True)
+        self.font_btn    = _sysfont("Arial", 20, bold=True)
+        self.font_sub    = _sysfont("Arial", 15)
         self.title_top   = self.font_title.render("TOILET",    True, WHITE)
         self.title_bot   = self.font_title.render("SIMULATOR", True, GOLD)
         self.subtitle    = self.font_sub.render(
@@ -82,8 +91,8 @@ class SplashState:
             self._btn_select.center = (cx, SCREEN_HEIGHT - 100)
 
         # Audio
-        self._flush = pygame.mixer.Sound(str(self._SND_DIR / "flush.wav"))
-        self._knock = pygame.mixer.Sound(str(self._SND_DIR / "konck with sonny.wav"))
+        self._flush = pygame.mixer.Sound(str(self._SND_DIR / "flush.ogg"))
+        self._knock = pygame.mixer.Sound(str(self._SND_DIR / "konck with sonny.ogg"))
         self._elapsed = 0.0
         self._knock_played = False
         self._knock_at = self._flush.get_length() - self._KNOCK_OFFSET
@@ -182,7 +191,7 @@ class PlayingState:
         self._puddle_dirty = False
         # Stretch to 1.25× length so it plays 20% slower
         self._weeee = _stretch_sound(
-            ASSETS_DIR / "pee sounds" / "floor" / "weeeeee.wav", factor=1.25
+            ASSETS_DIR / "sounds" / "floor" / "weeeeee.ogg", factor=1.25
         )
         self.transition: Optional[str] = None
         self.results_data: Optional[dict] = None
@@ -332,11 +341,11 @@ class LevelSelectState:
 
     def __init__(self, level_manager) -> None:
         self.lm = level_manager
-        self.font_title   = pygame.font.SysFont("Arial", 26, bold=True)
-        self.font_name    = pygame.font.SysFont("Arial", 14)
-        self.font_num     = pygame.font.SysFont("Arial", 13)
-        self.font_hint    = pygame.font.SysFont("Arial", 13)
-        self.font_confirm = pygame.font.SysFont("Arial", 17, bold=True)
+        self.font_title   = _sysfont("Arial", 26, bold=True)
+        self.font_name    = _sysfont("Arial", 14)
+        self.font_num     = _sysfont("Arial", 13)
+        self.font_hint    = _sysfont("Arial", 13)
+        self.font_confirm = _sysfont("Arial", 17, bold=True)
         self.transition: Optional[str] = None
         self._confirming = False
         self._rows, self._indices = self._build_rows()
@@ -466,9 +475,9 @@ class ResultsState:
 
     def __init__(self, results: dict) -> None:
         self.results = results
-        self.font_large  = pygame.font.SysFont("Arial", 34, bold=True)
-        self.font_medium = pygame.font.SysFont("Arial", 24)
-        self.font_small  = pygame.font.SysFont("Arial", 18)
+        self.font_large  = _sysfont("Arial", 34, bold=True)
+        self.font_medium = _sysfont("Arial", 24)
+        self.font_small  = _sysfont("Arial", 18)
 
         self.frame = 0
         self.transition: Optional[str] = None

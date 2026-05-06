@@ -1,5 +1,7 @@
 """Toilet entity — bowl, rim, base."""
 
+from __future__ import annotations
+
 import pygame
 
 from game.settings import (

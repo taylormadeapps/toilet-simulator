@@ -1,12 +1,14 @@
 """Pee audio — seamless random sample cycling with flow-driven volume."""
 
+from __future__ import annotations
+
 import random
 
 import pygame
 
 from game.settings import ASSETS_DIR
 
-_SND_DIR = ASSETS_DIR / "pee sounds"
+_SND_DIR = ASSETS_DIR / "sounds"
 _FLOOR_DIR = _SND_DIR / "floor"
 _PEE_CHANNEL = 2          # dedicated mixer channel so we can control it precisely
 _FLOOR_CHANNEL = 3        # dedicated channel for floor-hit audio

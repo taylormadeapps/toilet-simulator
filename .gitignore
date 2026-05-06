@@ -209,3 +209,7 @@ __marimo__/
 
 # Game save data
 saves/
+
+# pygbag bundle staging (copied from /assets at build time)
+src/assets/
+src/sounds/
