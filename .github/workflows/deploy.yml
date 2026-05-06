@@ -30,7 +30,7 @@ jobs:
           cp -r assets/sounds src/sounds
 
       - name: Build web version
-        run: xvfb-run -a python -u -m pygbag --build --width 312 --height 675 --ume_block 0 --disable-sound-format-error --app_name "Toilet Simulator" src/main.py
+        run: xvfb-run -a python -u -m pygbag --build --width 312 --height 675 --disable-sound-format-error --app_name "Toilet Simulator" src/main.py
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

@@ -20,7 +20,10 @@ can be played in a browser, mirroring the GitHub Pages deployment.
    cp -r assets/sounds src/sounds
    ```
 5. Launch pygbag in the background (`run_in_background: true`):
-   `python -u -m pygbag --width 312 --height 675 --ume_block 0 --app_name "Toilet Simulator" src/main.py`
+   `python -u -m pygbag --width 312 --height 675 --app_name "Toilet Simulator" src/main.py`
+   (`ume_block` is left at its default 1 so pygbag shows a brief
+   "click to start" overlay — required for the browser to unlock
+   audio playback before our splash screen plays the flush sound.)
 6. Poll the output file with an `until` loop until it contains
    `"Serving HTTP"`, then report the URL **http://localhost:8000**.
 7. Open the URL in the user's default browser:
