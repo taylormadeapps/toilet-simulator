@@ -16,7 +16,7 @@ from game.settings import (
     PUDDLE_COLOUR,
     ASSETS_DIR,
 )
-from game.levels import stars_str, PASS_STARS
+from game.levels import PASS_STARS
 from entities.player import Player
 from entities.toilet import Toilet
 from entities.stream import Stream
@@ -53,25 +53,35 @@ def _stretch_sound(path: Path, factor: float) -> pygame.mixer.Sound:
 # ---------------------------------------------------------------------------
 
 class SplashState:
-    """Title screen. Press SPACE or click to play."""
+    """Title screen."""
 
     _SND_DIR = ASSETS_DIR / "pee sounds"
-    _KNOCK_OFFSET = 2.0  # seconds before flush end to trigger the knock
+    _KNOCK_OFFSET = 2.0
 
-    def __init__(self) -> None:
+    def __init__(self, level_manager=None) -> None:
         self.frame = 0
-        self.font_title = pygame.font.SysFont("Arial", 48, bold=True)
-        self.font_prompt = pygame.font.SysFont("Arial", 22)
-        self.font_sub = pygame.font.SysFont("Arial", 15)
-        # Pre-render title surfaces (don't create fonts in the loop)
-        self.title_top = self.font_title.render("TOILET", True, WHITE)
-        self.title_bot = self.font_title.render("SIMULATOR", True, GOLD)
-        self.subtitle = self.font_sub.render(
+        self._lm = level_manager
+        self._has_progress = level_manager is not None and level_manager._unlocked > 0
+        self.font_title  = pygame.font.SysFont("Arial", 48, bold=True)
+        self.font_btn    = pygame.font.SysFont("Arial", 20, bold=True)
+        self.font_sub    = pygame.font.SysFont("Arial", 15)
+        self.title_top   = self.font_title.render("TOILET",    True, WHITE)
+        self.title_bot   = self.font_title.render("SIMULATOR", True, GOLD)
+        self.subtitle    = self.font_sub.render(
             "An irreverent PowerWash-alike", True, GREY,
         )
         self.transition: Optional[str] = None
 
-        # Audio — flush plays immediately; knock fires in the last 2s of flush
+        # Button layout
+        cx = SCREEN_WIDTH // 2
+        self._btn_play   = pygame.Rect(0, 0, 220, 46)
+        self._btn_play.center = (cx, SCREEN_HEIGHT - 160 if self._has_progress else SCREEN_HEIGHT - 120)
+        self._btn_select: Optional[pygame.Rect] = None
+        if self._has_progress:
+            self._btn_select = pygame.Rect(0, 0, 220, 46)
+            self._btn_select.center = (cx, SCREEN_HEIGHT - 100)
+
+        # Audio
         self._flush = pygame.mixer.Sound(str(self._SND_DIR / "flush.wav"))
         self._knock = pygame.mixer.Sound(str(self._SND_DIR / "konck with sonny.wav"))
         self._elapsed = 0.0
@@ -89,43 +99,54 @@ class SplashState:
                 if event.key == pygame.K_SPACE:
                     self._stop_sounds()
                     self.transition = "play"
+                elif event.key == pygame.K_l and self._has_progress:
+                    self._stop_sounds()
+                    self.transition = "level_select"
                 elif event.key == pygame.K_ESCAPE:
                     self._stop_sounds()
                     self.transition = "quit"
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                self._stop_sounds()
-                self.transition = "play"
+                pos = event.pos
+                if self._btn_play.collidepoint(pos):
+                    self._stop_sounds()
+                    self.transition = "play"
+                elif self._btn_select and self._btn_select.collidepoint(pos):
+                    self._stop_sounds()
+                    self.transition = "level_select"
 
     def update(self, dt: float) -> None:
         self.frame += 1
         self._elapsed += dt
-        # Trigger knock in the last 2 seconds of the flush sample
         if not self._knock_played and self._elapsed >= self._knock_at:
             self._knock.play()
             self._knock_played = True
 
     def draw(self, surface: pygame.Surface) -> None:
         surface.fill(DARK_BLUE)
+        cx = SCREEN_WIDTH // 2
 
-        # Pulsing scale via transform (no per-frame font creation)
         pulse = math.sin(self.frame * 0.05) * 0.08 + 1.0
-        top_scaled = pygame.transform.rotozoom(self.title_top, 0, pulse)
-        bot_scaled = pygame.transform.rotozoom(self.title_bot, 0, pulse)
+        top_s = pygame.transform.rotozoom(self.title_top, 0, pulse)
+        bot_s = pygame.transform.rotozoom(self.title_bot, 0, pulse)
+        surface.blit(top_s, top_s.get_rect(centerx=cx, centery=SCREEN_HEIGHT // 3 - 20))
+        surface.blit(bot_s, bot_s.get_rect(centerx=cx, centery=SCREEN_HEIGHT // 3 + 50))
 
-        surface.blit(top_scaled, top_scaled.get_rect(
-            centerx=SCREEN_WIDTH // 2, centery=SCREEN_HEIGHT // 3 - 20))
-        surface.blit(bot_scaled, bot_scaled.get_rect(
-            centerx=SCREEN_WIDTH // 2, centery=SCREEN_HEIGHT // 3 + 50))
+        mouse = pygame.mouse.get_pos()
 
-        # Blinking prompt
-        if (self.frame // 30) % 2 == 0:
-            prompt = self.font_prompt.render("Click or SPACE to start", True, YELLOW)
-            surface.blit(prompt, prompt.get_rect(
-                centerx=SCREEN_WIDTH // 2, centery=SCREEN_HEIGHT - 100))
+        # Play button
+        hover_play = self._btn_play.collidepoint(mouse)
+        pygame.draw.rect(surface, GOLD if hover_play else WHITE, self._btn_play, border_radius=8)
+        lbl = self.font_btn.render("PLAY", True, DARK_BLUE)
+        surface.blit(lbl, lbl.get_rect(center=self._btn_play.center))
 
-        # Subtitle
-        surface.blit(self.subtitle, self.subtitle.get_rect(
-            centerx=SCREEN_WIDTH // 2, centery=SCREEN_HEIGHT - 50))
+        # Level select button
+        if self._btn_select:
+            hover_sel = self._btn_select.collidepoint(mouse)
+            pygame.draw.rect(surface, GOLD if hover_sel else WHITE, self._btn_select, border_radius=8)
+            lbl2 = self.font_btn.render("LEVEL SELECT", True, DARK_BLUE)
+            surface.blit(lbl2, lbl2.get_rect(center=self._btn_select.center))
+
+        surface.blit(self.subtitle, self.subtitle.get_rect(centerx=cx, centery=SCREEN_HEIGHT - 22))
 
 
 # ---------------------------------------------------------------------------
@@ -254,6 +275,183 @@ class PlayingState:
 # Results State
 # ---------------------------------------------------------------------------
 
+def _star_points(
+    cx: float, cy: float, outer_r: float, inner_r: float
+) -> list[tuple[float, float]]:
+    pts = []
+    for i in range(10):
+        angle = math.radians(-90 + i * 36)
+        r = outer_r if i % 2 == 0 else inner_r
+        pts.append((cx + r * math.cos(angle), cy + r * math.sin(angle)))
+    return pts
+
+
+def _draw_star_row(
+    surface: pygame.Surface,
+    cx: int,
+    cy: int,
+    star_count: float,
+    outer_r: int,
+    color: tuple,
+) -> None:
+    """Draw 3 polygon stars (full / left-half / empty) centred at (cx, cy)."""
+    inner_r = outer_r * 0.4
+    spacing = int(outer_r * 2.6)
+    full = int(star_count)
+    has_half = (star_count - full) >= 0.25
+
+    for i, sx in enumerate([cx - spacing, cx, cx + spacing]):
+        pts = _star_points(sx, cy, outer_r, inner_r)
+        if i < full:
+            pygame.draw.polygon(surface, color, pts)
+        elif i == full and has_half:
+            # Left-half polygon: top→inner-upper-left→outer-left→inner-lower-left→outer-lower-left→bottom
+            half_pts = [pts[0], pts[9], pts[8], pts[7], pts[6], pts[5]]
+            pygame.draw.polygon(surface, color, half_pts)
+            pygame.draw.polygon(surface, color, pts, 1)
+        else:
+            pygame.draw.polygon(surface, color, pts, 1)
+
+
+# ---------------------------------------------------------------------------
+# Level Select State
+# ---------------------------------------------------------------------------
+
+class LevelSelectState:
+    """Level selection screen — accessible from the main menu."""
+
+    _ROW_H   = 42
+    _ROW_GAP = 10
+    _PAD     = 16
+
+    def __init__(self, level_manager) -> None:
+        self.lm = level_manager
+        self.font_title   = pygame.font.SysFont("Arial", 26, bold=True)
+        self.font_name    = pygame.font.SysFont("Arial", 14)
+        self.font_num     = pygame.font.SysFont("Arial", 13)
+        self.font_hint    = pygame.font.SysFont("Arial", 13)
+        self.font_confirm = pygame.font.SysFont("Arial", 17, bold=True)
+        self.transition: Optional[str] = None
+        self._confirming = False
+        self._rows, self._indices = self._build_rows()
+
+        # Reset button — bottom left corner
+        self._btn_reset = pygame.Rect(self._PAD, SCREEN_HEIGHT - 38, 100, 26)
+
+        # Confirmation dialog buttons
+        dialog_cx = SCREEN_WIDTH // 2
+        self._btn_yes = pygame.Rect(0, 0, 90, 36)
+        self._btn_yes.center = (dialog_cx - 54, SCREEN_HEIGHT // 2 + 30)
+        self._btn_no  = pygame.Rect(0, 0, 90, 36)
+        self._btn_no.center  = (dialog_cx + 54, SCREEN_HEIGHT // 2 + 30)
+
+    def _build_rows(self) -> tuple[list[pygame.Rect], list[int]]:
+        """Return (rects, level_indices) for only the unlocked levels."""
+        rects, indices = [], []
+        y = 60
+        row_w = SCREEN_WIDTH - self._PAD * 2
+        for i in range(self.lm.level_count):
+            if self.lm.best_stars(i) == 0.0 and i != self.lm.current_level:
+                break
+            rects.append(pygame.Rect(self._PAD, y, row_w, self._ROW_H))
+            indices.append(i)
+            y += self._ROW_H + self._ROW_GAP
+        return rects, indices
+
+    def handle_events(self, events: list[pygame.event.Event]) -> None:
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    if self._confirming:
+                        self._confirming = False
+                    else:
+                        self.transition = "splash"
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                pos = event.pos
+                if self._confirming:
+                    if self._btn_yes.collidepoint(pos):
+                        self.lm.reset()
+                        self.transition = "splash"
+                    elif self._btn_no.collidepoint(pos):
+                        self._confirming = False
+                else:
+                    if self._btn_reset.collidepoint(pos):
+                        self._confirming = True
+                    else:
+                        for rect, level_idx in zip(self._rows, self._indices):
+                            if rect.collidepoint(pos):
+                                self.lm.current_level = level_idx
+                                self.transition = "play_level"
+                                break
+
+    def update(self, dt: float) -> None:
+        pass
+
+    def draw(self, surface: pygame.Surface) -> None:
+        surface.fill(DARK_BLUE)
+        cx = SCREEN_WIDTH // 2
+
+        title = self.font_title.render("SELECT LEVEL", True, GOLD)
+        surface.blit(title, title.get_rect(centerx=cx, y=14))
+
+        mouse = pygame.mouse.get_pos()
+
+        for rect, level_idx in zip(self._rows, self._indices):
+            stars   = self.lm.best_stars(level_idx)
+            hovered = rect.collidepoint(mouse)
+
+            bg = (55, 65, 90) if hovered else (30, 38, 58)
+            pygame.draw.rect(surface, bg, rect, border_radius=5)
+            pygame.draw.rect(surface, GOLD if hovered else (70, 80, 100), rect, 1, border_radius=5)
+
+            num_s  = self.font_num.render(f"{level_idx + 1:02d}", True, GREY)
+            surface.blit(num_s, (rect.x + 8, rect.centery - num_s.get_height() // 2))
+
+            cfg    = self.lm.config(level_idx)
+            name_s = self.font_name.render(cfg["name"], True, WHITE)
+            surface.blit(name_s, (rect.x + 32, rect.centery - name_s.get_height() // 2))
+
+            star_color = GOLD if stars > 0 else (70, 80, 100)
+            _draw_star_row(surface, rect.right - 38, rect.centery, stars, 6, star_color)
+
+        hint = self.font_hint.render("ESC — back", True, GREY)
+        surface.blit(hint, hint.get_rect(centerx=cx, y=SCREEN_HEIGHT - 22))
+
+        # Reset button
+        hover_reset = self._btn_reset.collidepoint(mouse) and not self._confirming
+        pygame.draw.rect(surface, (80, 30, 30) if hover_reset else (50, 22, 22),
+                         self._btn_reset, border_radius=4)
+        pygame.draw.rect(surface, (160, 60, 60), self._btn_reset, 1, border_radius=4)
+        rlbl = self.font_hint.render("Reset Save", True, (200, 80, 80))
+        surface.blit(rlbl, rlbl.get_rect(center=self._btn_reset.center))
+
+        # Confirmation overlay
+        if self._confirming:
+            overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 180))
+            surface.blit(overlay, (0, 0))
+
+            box = pygame.Rect(24, SCREEN_HEIGHT // 2 - 55, SCREEN_WIDTH - 48, 110)
+            pygame.draw.rect(surface, (28, 18, 18), box, border_radius=8)
+            pygame.draw.rect(surface, (160, 60, 60), box, 2, border_radius=8)
+
+            q1 = self.font_confirm.render("Reset all progress?", True, WHITE)
+            q2 = self.font_hint.render("This cannot be undone.", True, (180, 100, 100))
+            surface.blit(q1, q1.get_rect(centerx=cx, centery=SCREEN_HEIGHT // 2 - 24))
+            surface.blit(q2, q2.get_rect(centerx=cx, centery=SCREEN_HEIGHT // 2 - 4))
+
+            hover_yes = self._btn_yes.collidepoint(mouse)
+            hover_no  = self._btn_no.collidepoint(mouse)
+            pygame.draw.rect(surface, (160, 40, 40) if hover_yes else (100, 28, 28),
+                             self._btn_yes, border_radius=6)
+            pygame.draw.rect(surface, (40, 100, 40) if hover_no else (28, 60, 28),
+                             self._btn_no,  border_radius=6)
+            yes_lbl = self.font_confirm.render("YES", True, WHITE)
+            no_lbl  = self.font_confirm.render("NO",  True, WHITE)
+            surface.blit(yes_lbl, yes_lbl.get_rect(center=self._btn_yes.center))
+            surface.blit(no_lbl,  no_lbl.get_rect(center=self._btn_no.center))
+
+
 class ResultsState:
     """Level complete — show star rating and score breakdown."""
 
@@ -265,9 +463,7 @@ class ResultsState:
         self.font_large  = pygame.font.SysFont("Arial", 34, bold=True)
         self.font_medium = pygame.font.SysFont("Arial", 24)
         self.font_small  = pygame.font.SysFont("Arial", 18)
-        # Segoe UI Symbol has ★/☆ glyphs; fall back to DejaVu Sans
-        self.font_stars_lg = pygame.font.SysFont("Segoe UI Symbol,DejaVu Sans", 34)
-        self.font_stars_md = pygame.font.SysFont("Segoe UI Symbol,DejaVu Sans", 24)
+
         self.frame = 0
         self.transition: Optional[str] = None
 
@@ -279,6 +475,8 @@ class ResultsState:
                     self.transition = "next_level" if r.get("can_advance") else "retry"
                 elif event.key == pygame.K_r:
                     self.transition = "retry"
+                elif event.key == pygame.K_l:
+                    self.transition = "level_select"
                 elif event.key == pygame.K_ESCAPE:
                     self.transition = "splash"
             elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -309,12 +507,11 @@ class ResultsState:
             ("Score",    str(r["score"]),          r["score_stars"]),
             ("Accuracy", f"{r['accuracy']}%",      r["acc_stars"]),
         ):
-            lbl  = self.font_small.render(label,    True, GREY)
-            val  = self.font_medium.render(value_str, True, WHITE)
-            star = self.font_stars_md.render(stars_str(star_val), True, GOLD)
-            surface.blit(lbl,  lbl.get_rect(centerx=cx, y=y))
-            surface.blit(val,  val.get_rect(centerx=cx, y=y + 20))
-            surface.blit(star, star.get_rect(centerx=cx, y=y + 46))
+            lbl = self.font_small.render(label,     True, GREY)
+            val = self.font_medium.render(value_str, True, WHITE)
+            surface.blit(lbl, lbl.get_rect(centerx=cx, y=y))
+            surface.blit(val, val.get_rect(centerx=cx, y=y + 20))
+            _draw_star_row(surface, cx, y + 56, star_val, 10, GOLD)
             y += 95
 
         # Divider
@@ -322,10 +519,9 @@ class ResultsState:
         y += 12
 
         # Overall stars — big centrepiece
-        overall_lbl  = self.font_small.render("Overall", True, GREY)
-        overall_star = self.font_stars_lg.render(stars_str(r["overall_stars"]), True, GOLD)
-        surface.blit(overall_lbl,  overall_lbl.get_rect(centerx=cx, y=y))
-        surface.blit(overall_star, overall_star.get_rect(centerx=cx, y=y + 22))
+        overall_lbl = self.font_small.render("Overall", True, GREY)
+        surface.blit(overall_lbl, overall_lbl.get_rect(centerx=cx, y=y))
+        _draw_star_row(surface, cx, y + 36, r["overall_stars"], 14, GOLD)
         y += 88
 
         # Pass / fail indicator
@@ -333,10 +529,19 @@ class ResultsState:
         if passed:
             verdict = self.font_medium.render("PASSED!", True, self._GREEN)
         else:
-            needed = self.font_stars_md.render(
-                f"Need {PASS_STARS:.0f}\u2605 overall to advance", True, self._RED,
-            )
-            surface.blit(needed, needed.get_rect(centerx=cx, y=y))
+            n_stars = int(PASS_STARS)
+            part1 = self.font_small.render("Need", True, self._RED)
+            part2 = self.font_small.render(" overall to advance", True, self._RED)
+            total_w = part1.get_width() + 14 * 2 + part2.get_width()
+            x0 = cx - total_w // 2
+            text_cy = y + part1.get_height() // 2
+            surface.blit(part1, (x0, y))
+            x0 += part1.get_width() + 2
+            for _ in range(n_stars):
+                pts = _star_points(x0 + 7, text_cy, 7, 7 * 0.4)
+                pygame.draw.polygon(surface, self._RED, pts)
+                x0 += 16
+            surface.blit(part2, (x0, y))
             y += 28
             verdict = self.font_medium.render("Keep trying!", True, self._RED)
         surface.blit(verdict, verdict.get_rect(centerx=cx, y=y))
@@ -354,9 +559,9 @@ class ResultsState:
         # Blinking prompt
         if (self.frame // 30) % 2 == 0:
             if r.get("can_advance"):
-                lines = ["SPACE — next level", "R — retry   ESC — menu"]
+                lines = ["SPACE — next level", "R — retry   L — levels   ESC — menu"]
             else:
-                lines = ["SPACE / R — retry", "ESC — menu"]
+                lines = ["SPACE / R — retry", "L — levels   ESC — menu"]
             py = SCREEN_HEIGHT - 60
             for line in lines:
                 t = self.font_small.render(line, True, YELLOW)

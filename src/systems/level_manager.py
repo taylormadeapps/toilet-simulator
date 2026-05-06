@@ -30,6 +30,9 @@ class LevelManager:
     def current_config(self) -> dict:
         return LEVELS[self.current_level]
 
+    def config(self, idx: int) -> dict:
+        return LEVELS[idx]
+
     def is_unlocked(self, idx: int) -> bool:
         return idx <= self._unlocked
 
@@ -74,6 +77,14 @@ class LevelManager:
                 self._best_stars[i] = float(s)
         except Exception:
             pass  # corrupt save — start fresh
+
+    def reset(self) -> None:
+        """Wipe all progress and delete the save file."""
+        self.current_level = 0
+        self._unlocked = 0
+        self._best_stars = [0.0] * len(LEVELS)
+        if _SAVE_PATH.exists():
+            _SAVE_PATH.unlink()
 
     def _save(self) -> None:
         _SAVE_PATH.parent.mkdir(parents=True, exist_ok=True)

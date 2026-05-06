@@ -7,8 +7,8 @@ import sys
 import pygame
 
 from game.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, WINDOW_TITLE
-from game.states import SplashState, PlayingState, ResultsState
-from game.levels import compute_stars, stars_str, PASS_STARS
+from game.states import SplashState, PlayingState, ResultsState, LevelSelectState
+from game.levels import compute_stars, PASS_STARS
 from systems.input_handler import update_cursor, reset_cursor
 from systems.level_manager import LevelManager
 
@@ -27,7 +27,7 @@ class Game:
         pygame.display.set_caption(WINDOW_TITLE)
         self.clock = pygame.time.Clock()
         self.level_manager = LevelManager()
-        self.state: SplashState | PlayingState | ResultsState = SplashState()
+        self.state: SplashState | PlayingState | ResultsState | LevelSelectState = SplashState(self.level_manager)
         self.running = True
 
     # ------------------------------------------------------------------
@@ -117,8 +117,17 @@ class Game:
             _grab_mouse(True)
             reset_cursor()
 
+        elif transition == "level_select":
+            self.state = LevelSelectState(self.level_manager)
+            _grab_mouse(False)
+
+        elif transition == "play_level":
+            self.state = PlayingState(self._playing_config())
+            _grab_mouse(True)
+            reset_cursor()
+
         elif transition == "splash":
-            self.state = SplashState()
+            self.state = SplashState(self.level_manager)
             _grab_mouse(False)
 
         elif transition == "quit":
