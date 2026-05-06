@@ -28,7 +28,7 @@ jobs:
         run: cp -r assets src/assets
 
       - name: Build web version
-        run: xvfb-run -a python -u -m pygbag --build --app_name "Toilet Simulator" src/main.py
+        run: xvfb-run -a python -u -m pygbag --build --disable-sound-format-error --app_name "Toilet Simulator" src/main.py
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
