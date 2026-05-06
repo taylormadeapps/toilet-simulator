@@ -32,10 +32,10 @@ class PeeAudio:
 
     def __init__(self) -> None:
         self._samples = [
-            pygame.mixer.Sound(str(_SND_DIR / "real wee.wav")),
-            pygame.mixer.Sound(str(_SND_DIR / "fake pee1.wav")),
-            pygame.mixer.Sound(str(_SND_DIR / "fake pee2.wav")),
-            pygame.mixer.Sound(str(_SND_DIR / "fake pee3.wav")),
+            pygame.mixer.Sound(str(_SND_DIR / "real wee.ogg")),
+            pygame.mixer.Sound(str(_SND_DIR / "fake pee1.ogg")),
+            pygame.mixer.Sound(str(_SND_DIR / "fake pee2.ogg")),
+            pygame.mixer.Sound(str(_SND_DIR / "fake pee3.ogg")),
         ]
         self._ch = pygame.mixer.Channel(_PEE_CHANNEL)
         self._last_idx: int = -1
@@ -130,11 +130,11 @@ class FloorAudio:
 
     def __init__(self) -> None:
         self._samples = [
-            pygame.mixer.Sound(str(_FLOOR_DIR / "floor1.wav")),
-            pygame.mixer.Sound(str(_FLOOR_DIR / "floor2.wav")),
-            pygame.mixer.Sound(str(_FLOOR_DIR / "floor3.wav")),
-            pygame.mixer.Sound(str(_FLOOR_DIR / "floor4.wav")),
-            pygame.mixer.Sound(str(_FLOOR_DIR / "floor5.wav")),
+            pygame.mixer.Sound(str(_FLOOR_DIR / "floor1.ogg")),
+            pygame.mixer.Sound(str(_FLOOR_DIR / "floor2.ogg")),
+            pygame.mixer.Sound(str(_FLOOR_DIR / "floor3.ogg")),
+            pygame.mixer.Sound(str(_FLOOR_DIR / "floor4.ogg")),
+            pygame.mixer.Sound(str(_FLOOR_DIR / "floor5.ogg")),
         ]
         self._ch = pygame.mixer.Channel(_FLOOR_CHANNEL)
         self._last_idx: int = -1
