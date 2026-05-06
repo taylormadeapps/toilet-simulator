@@ -11,11 +11,11 @@ from game.settings import (
 class Toilet:
     """The toilet. Bowl is the target zone."""
 
-    def __init__(self) -> None:
+    def __init__(self, bowl_scale: float = 1.0, offset_y: int = 0) -> None:
         self.centre_x = TOILET_CENTRE_X
-        self.centre_y = TOILET_CENTRE_Y
-        self.bowl_rx = BOWL_RADIUS_X
-        self.bowl_ry = BOWL_RADIUS_Y
+        self.centre_y = TOILET_CENTRE_Y + offset_y
+        self.bowl_rx = int(BOWL_RADIUS_X * bowl_scale)
+        self.bowl_ry = int(BOWL_RADIUS_Y * bowl_scale)
 
         # Collision rect (bounding box for quick reject)
         self.bowl_rect = pygame.Rect(
@@ -26,8 +26,8 @@ class Toilet:
         )
 
         # Water zone — centre scoring target. Taller oval matches the bowl shape.
-        self.centre_rx: float = 28.0
-        self.centre_ry: float = 70.0
+        self.centre_rx: float = 28.0 * bowl_scale
+        self.centre_ry: float = 70.0 * bowl_scale
 
     def is_in_bowl(self, x: float, y: float) -> bool:
         """Check if a point is inside the water area (bowl minus rim)."""

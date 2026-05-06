@@ -165,12 +165,13 @@ class PlayingState:
         num = level_config.get("level_number", "")
         self._level_name = f"Level {num}: {level_config['name']}" if num else level_config["name"]
         self.player = Player()
-        self.toilet = Toilet()
+        self.toilet = Toilet(level_config.get("bowl_scale", 1.0), level_config.get("toilet_offset_y", 0))
         self.stream = Stream(self.player.stream_origin)
         self.bladder = Bladder(
             level_config["bladder_volume"],
             level_config["depletion_rate"],
         )
+        self._dark_mode: bool = level_config.get("dark_mode", False)
         self.scoring = Scoring()
         self.hud = HUD()
         self.pee_audio = PeeAudio()
@@ -253,18 +254,23 @@ class PlayingState:
         self._puddle_dirty = False
 
     def draw(self, surface: pygame.Surface) -> None:
-        # 1. Floor
-        _draw_floor(surface)
+        if self._dark_mode:
+            surface.fill((0, 0, 0))
+        else:
+            # 1. Floor
+            _draw_floor(surface)
         # 2. Puddles (above floor, below toilet) — redraw only when changed
         if self._puddle_dirty:
             self._redraw_puddles()
         surface.blit(self._puddle_surf, (0, 0))
-        # 3. Toilet
-        self.toilet.draw(surface)
+        if not self._dark_mode:
+            # 3. Toilet
+            self.toilet.draw(surface)
         # 4. Stream
         self.stream.draw(surface, self.bladder.pressure)
-        # 5. Player belly (foreground)
-        self.player.draw(surface)
+        if not self._dark_mode:
+            # 5. Player belly (foreground)
+            self.player.draw(surface)
         # 6. HUD (always on top)
         self.hud.draw(surface, self.bladder.volume, self.scoring.score, self._level_name)
         # 7. Targeting reticle over the hidden cursor

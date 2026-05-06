@@ -119,14 +119,14 @@ Levels are unlocked linearly. Each level introduces a new challenge or gimmick.
 ### Level 2 — The Thimble
 - **Gimmick:** Tiny toilet bowl
 - **Purpose:** Precision challenge. The bowl is comically small.
-- **Bowl:** Much smaller than standard
+- **Bowl:** 5/8 of standard size (`bowl_scale: 0.625`)
 - **Modifiers:** None
 
-### Level 3 — Earthquake
-- **Gimmick:** The screen/world shakes periodically
-- **Purpose:** Aim while the toilet moves beneath you
+### Level 3 — Lights Out
+- **Gimmick:** Pitch black. Only the stream, puddles, and HUD are visible.
+- **Purpose:** Aim blind — use splash sounds and puddle positions as feedback.
 - **Bowl:** Normal size
-- **Modifiers:** Screen shake (sinusoidal offset on the world position)
+- **Modifiers:** `dark_mode: true` — floor, toilet, and belly hidden; background is black
 
 ### Level 4 — Friday Night
 - **Gimmick:** The player is drunk. Aim sways involuntarily.

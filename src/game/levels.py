@@ -27,8 +27,8 @@ PASS_STARS = 2.0
 
 LEVELS: list[dict] = [
     {"name": "The Porcelain Throne",     "bladder_volume": BLADDER_START, "depletion_rate": BLADDER_DEPLETION_RATE},
-    {"name": "Splash Mountain",          "bladder_volume": BLADDER_START, "depletion_rate": BLADDER_DEPLETION_RATE},
-    {"name": "Tinkle Triangle",          "bladder_volume": BLADDER_START, "depletion_rate": BLADDER_DEPLETION_RATE},
+    {"name": "The Thimble",              "bladder_volume": BLADDER_START, "depletion_rate": BLADDER_DEPLETION_RATE, "bowl_scale": 0.625, "toilet_offset_y": 80},
+    {"name": "Lights Out",               "bladder_volume": BLADDER_START, "depletion_rate": BLADDER_DEPLETION_RATE, "dark_mode": True},
     {"name": "Aim & Shame",              "bladder_volume": BLADDER_START, "depletion_rate": BLADDER_DEPLETION_RATE},
     {"name": "Wee Man Standing",         "bladder_volume": BLADDER_START, "depletion_rate": BLADDER_DEPLETION_RATE},
     {"name": "The Royal Flush",          "bladder_volume": BLADDER_START, "depletion_rate": BLADDER_DEPLETION_RATE},
